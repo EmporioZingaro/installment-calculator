@@ -1,24 +1,22 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import { calcFinalPrice } from './fees';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+// Grab the inputs once
+const priceInput        = document.getElementById('price')        as HTMLInputElement;
+const installmentsInput = document.getElementById('installments') as HTMLInputElement;
+const feeInput          = document.getElementById('fee')          as HTMLInputElement;
+const output            = document.getElementById('out')          as HTMLPreElement;
+const button            = document.getElementById('calc')!;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+button.addEventListener('click', () => {
+  const basePrice = parseFloat(priceInput.value);
+  const feePct    = parseFloat(feeInput.value);
+  const n         = parseInt(installmentsInput.value, 10);
+
+  const { finalPrice, surcharge } = calcFinalPrice(basePrice, feePct);
+
+  const perInst = (finalPrice / n).toFixed(2);
+
+  output.textContent =
+    `${n}× de R$ ${perInst}\n` +
+    `Total: R$ ${finalPrice.toFixed(2)}  (acréscimo R$ ${surcharge.toFixed(2)})`;
+});
