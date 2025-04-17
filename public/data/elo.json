@@ -1,0 +1,17 @@
+{
+  "issuer": "Elo",
+  "updated": "2025‑04‑11",
+  "parcelas": [
+    {"installments": 2, "mdr": 2.77, "rr": 5.06, "total": 7.83},
+    {"installments": 3, "mdr": 2.77, "rr": 5.61, "total": 8.38},
+    {"installments": 4, "mdr": 2.77, "rr": 6.20, "total": 8.97},
+    {"installments": 5, "mdr": 2.77, "rr": 6.80, "total": 9.57},
+    {"installments": 6, "mdr": 2.77, "rr": 7.50, "total": 10.27},
+    {"installments": 7, "mdr": 3.00, "rr": 8.19, "total": 11.19},
+    {"installments": 8, "mdr": 3.00, "rr": 9.04, "total": 12.04},
+    {"installments": 9, "mdr": 3.00, "rr": 9.81, "total": 12.81},
+    {"installments": 10, "mdr": 3.00, "rr": 10.50, "total": 13.50},
+    {"installments": 11, "mdr": 3.00, "rr": 11.11, "total": 14.11},
+    {"installments": 12, "mdr": 3.00, "rr": 11.76, "total": 14.76}
+  ]
+}

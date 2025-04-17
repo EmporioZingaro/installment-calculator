@@ -1,0 +1,11 @@
+{
+  "issuer": "Sorocred",
+  "updated": "2025‑04‑11",
+  "parcelas": [
+    {"installments": 2, "mdr": 6.00, "rr": 5.06, "total": 11.06},
+    {"installments": 3, "mdr": 6.00, "rr": 5.61, "total": 11.61},
+    {"installments": 4, "mdr": 6.00, "rr": 6.20, "total": 12.20},
+    {"installments": 5, "mdr": 6.00, "rr": 6.80, "total": 12.80},
+    {"installments": 6, "mdr": 6.00, "rr": 7.50, "total": 13.50}
+  ]
+}

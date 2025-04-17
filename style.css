@@ -1,0 +1,92 @@
+/* ------------- CSS VARIABLES (feel free to tweak) ------------- */
+:root {
+  --bg        : #f5f5f7;
+  --surface   : #ffffff;
+  --text      : #333;
+  --border    : #d0d0d0;
+  --accent    : #0066c0;   /* subtle blue accent */
+  --radius    : 8px;
+}
+
+/* ------------- GLOBAL RESET ----------------------------------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html,body { margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* ------------- LAYOUT ----------------------------------------- */
+.container {
+  max-width: 680px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 10px rgba(0,0,0,.05);
+}
+
+/* ------------- HEADER ----------------------------------------- */
+header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+header img { width: 48px; height: 48px; }
+
+/* ------------- FORM ------------------------------------------- */
+label {
+  display: block;
+  margin: .75rem 0 .25rem;
+  font-weight: 600;
+}
+
+input,
+select,
+button {
+  padding: .45rem .6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+}
+
+button {
+  cursor: pointer;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  margin-top: 1rem;
+}
+
+button:hover { filter: brightness(1.1); }
+
+#msg { color: #c00; margin-top: .5rem; }
+
+/* ------------- TABLE ------------------------------------------ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+th, td {
+  border: 1px solid var(--border);
+  padding: .45rem .3rem;
+  text-align: right;
+}
+
+th:nth-child(1),
+td:nth-child(1) { text-align: center; }
+
+thead { background: #fafafa; }
+
+tbody tr:hover { background: #f0f8ff; }

@@ -1,5 +1,5 @@
 {
-  "issuer": "Visa",
+  "issuer": "Diners",
   "updated": "2025‑04‑11",
   "parcelas": [
     {"installments": 7, "mdr": 1.93, "rr": 8.19, "total": 10.12},

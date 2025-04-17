@@ -1,0 +1,11 @@
+{
+  "issuer": "JCB",
+  "updated": "2025‑04‑11",
+  "parcelas": [
+    {"installments": 5, "mdr": 3.49, "rr": 6.80, "total": 10.29},
+    {"installments": 2, "mdr": 3.49, "rr": 5.06, "total": 8.55},
+    {"installments": 3, "mdr": 3.49, "rr": 5.61, "total": 9.10},
+    {"installments": 4, "mdr": 3.49, "rr": 6.20, "total": 9.69},
+    {"installments": 6, "mdr": 3.49, "rr": 7.50, "total": 10.99}
+  ]
+}
