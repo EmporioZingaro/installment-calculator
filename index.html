@@ -9,13 +9,14 @@
 <body>
   <main class="container">
     <header>
-      <img src="/logo.svg" alt="Logo">
+      <img src="/logo.svg" alt="Logo" width="48" height="48">
       <h1>Calculadora de Parcelamento</h1>
     </header>
 
     <label for="issuer">Bandeira</label>
     <select id="issuer">
       <option value="">-- escolha --</option>
+      <!-- opções preenchidas via JS -->
     </select>
 
     <label for="price">Valor da compra (R$)</label>
@@ -23,6 +24,8 @@
 
     <button id="calc">Calcular</button>
     <div id="msg"></div>
+
+    <p style="margin-top:1rem"><a href="/settings.html">Configurações</a></p>
 
     <table>
       <thead>
