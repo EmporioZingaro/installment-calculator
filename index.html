@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calculadora de Parcelamento</title>
+</head>
+<body>
+  <h1>Calculadora de Parcelamento</h1>
+
+  <label>Valor base (R$):
+    <input id="price" type="number" step="0.01" value="100" />
+  </label>
+
+  <label>Parcelas:
+    <input id="installments" type="number" min="1" max="12" value="5" />
+  </label>
+
+  <label>Taxa (MDR + RR) %:
+    <input id="fee" type="number" step="0.01" value="8.52" />
+  </label>
+
+  <button id="calc">Calcular</button>
+
+  <pre id="out"></pre>
+
+  <script type="module">
+    import { calcFinalPrice } from './src/fees.ts';
+
+    document.getElementById('calc').onclick = () => {
+      const base = parseFloat(price.value);
+      const fee  = parseFloat(fee.value);
+      const inst = parseInt(installments.value, 10);
+
+      const { finalPrice, surcharge } = calcFinalPrice(base, fee);
+
+      out.textContent =
+        `${inst}x de R$ ${(finalPrice / inst).toFixed(2)}\n` +
+        `Total: R$ ${finalPrice.toFixed(2)} (acréscimo R$ ${surcharge.toFixed(2)})`;
+    };
+  </script>
+</body>
+</html>
