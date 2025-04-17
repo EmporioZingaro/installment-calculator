@@ -1,22 +1,53 @@
-import { calcFinalPrice } from './fees';
+import { buildComparisonTable, IssuerTable } from './fees';
 
-// Grab the inputs once
-const priceInput        = document.getElementById('price')        as HTMLInputElement;
-const installmentsInput = document.getElementById('installments') as HTMLInputElement;
-const feeInput          = document.getElementById('fee')          as HTMLInputElement;
-const output            = document.getElementById('out')          as HTMLPreElement;
-const button            = document.getElementById('calc')!;
+// --- Small helper to fetch the JSON file for the chosen issuer ----------
+async function loadIssuerTable(name: string): Promise<IssuerTable> {
+  // slugify: "Visa" → "visa"
+  const file = `/data/${name.toLowerCase()}.json`;
+  const res = await fetch(file);
+  if (!res.ok) throw new Error(`Tabela não encontrada: ${file}`);
+  return res.json();
+}
 
-button.addEventListener('click', () => {
-  const basePrice = parseFloat(priceInput.value);
-  const feePct    = parseFloat(feeInput.value);
-  const n         = parseInt(installmentsInput.value, 10);
+// --- Grab HTML elements once -------------------------------------------
+const issuerSelect = document.getElementById('issuer') as HTMLSelectElement;
+const priceInput   = document.getElementById('price')  as HTMLInputElement;
+const calcBtn      = document.getElementById('calc')   as HTMLButtonElement;
+const tbody        = document.getElementById('tbody')  as HTMLTableSectionElement;
+const msg          = document.getElementById('msg')    as HTMLDivElement;
 
-  const { finalPrice, surcharge } = calcFinalPrice(basePrice, feePct);
+// --- Populate dropdown (hard‑coded list for now) ------------------------
+['Visa'].forEach((brand) => {
+  const opt = document.createElement('option');
+  opt.value = opt.textContent = brand;
+  issuerSelect.appendChild(opt);
+});
 
-  const perInst = (finalPrice / n).toFixed(2);
+// --- Action -------------------------------------------------------------
+calcBtn.addEventListener('click', async () => {
+  tbody.innerHTML = '';          // clear old table rows
+  msg.textContent = '';          // clear messages
 
-  output.textContent =
-    `${n}× de R$ ${perInst}\n` +
-    `Total: R$ ${finalPrice.toFixed(2)}  (acréscimo R$ ${surcharge.toFixed(2)})`;
+  const issuer = issuerSelect.value;
+  const base   = parseFloat(priceInput.value);
+
+  if (!issuer) return (msg.textContent = 'Selecione a bandeira.');
+  if (isNaN(base) || base <= 0) return (msg.textContent = 'Digite um valor válido.');
+
+  try {
+    const table = buildComparisonTable(base, await loadIssuerTable(issuer));
+    table.forEach((row) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${row.installments}×</td>
+        <td>${row.feePercent.toFixed(2)} %</td>
+        <td>R$ ${(row.perInstallment).toFixed(2)}</td>
+        <td>R$ ${row.finalPrice.toFixed(2)}</td>
+        <td>R$ ${row.surcharge.toFixed(2)}</td>
+        <td>${row.extraPaidPercent.toFixed(2)} %</td>`;
+      tbody.appendChild(tr);
+    });
+  } catch (err: any) {
+    msg.textContent = err.message;
+  }
 });
