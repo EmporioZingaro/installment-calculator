@@ -1,5 +1,5 @@
 /*  ---------------------------------------------------------------------------
-    src/main.ts – UI controller (v2, card‑grid layout)
+    src/main.ts – UI controller (v2, card‑grid layout) with logo preview & UX tweaks
     --------------------------------------------------------------------------- */
 
 import { buildComparisonTable } from './fees';
@@ -8,10 +8,15 @@ import { issuerTables, getIssuerTable } from './issuers';
 // Import our bundled gear‑icon SVG (via the `@` alias in Vite)
 import GearIcon from '@/assets/icons/gear.svg';
 
+// Import all issuer logos so we can preview the selected brand
+const issuerIcons = import.meta.glob<string>(
+  '@/assets/icons/issuers/*.svg',
+  { eager: true, import: 'default' }
+) as Record<string, string>;
+
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  Utilities and shorthand selectors                                        */
 /* ────────────────────────────────────────────────────────────────────────── */
-
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL'
@@ -19,22 +24,22 @@ const brl = new Intl.NumberFormat('pt-BR', {
 
 const $ = (id: string) => document.getElementById(id)!;
 
-const issuerSelect = $('issuer') as HTMLSelectElement;
-const priceInput   = $('price')  as HTMLInputElement;
-const calcBtn      = $('calc')   as HTMLButtonElement;
-const resetBtn     = $('reset')  as HTMLButtonElement;
-const msg          = $('msg')    as HTMLDivElement;
+const issuerSelect   = $('issuer')           as HTMLSelectElement;
+const issuerPreview  = $('issuer-preview')  as HTMLImageElement;
+const priceInput     = $('price')           as HTMLInputElement;
+const calcBtn        = $('calc')            as HTMLButtonElement;
+const resetBtn       = $('reset')           as HTMLButtonElement;
+const msg            = $('msg')             as HTMLDivElement;
+const cardsGrid      = $('cards')           as HTMLDivElement;          
+const tbodyLegacy    = $('tbody')           as HTMLTableSectionElement;
 
-const cardsGrid    = $('cards')  as HTMLDivElement;          // new result area
-const tbodyLegacy  = $('tbody')  as HTMLTableSectionElement; // retained but hidden
-
-/*  Simples Nacional stored per‑device in localStorage (default 5 %) */
+/*  Simples Nacional stored per‑device in localStorage (default 5 %)      */
 const getSimples = () =>
   (parseFloat(localStorage.getItem('simplesRate') ?? '5')) / 100;
 
-/*  ---------------------------------------------------------------------------
-    1.  Dropdown population (text‑only; logo injection is tackled later)
-    --------------------------------------------------------------------------- */
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  1. Populate dropdown & wire up issuer logo preview                      */
+/* ────────────────────────────────────────────────────────────────────────── */
 issuerTables.forEach(({ issuer }) => {
   const o = document.createElement('option');
   o.value = issuer;
@@ -42,14 +47,25 @@ issuerTables.forEach(({ issuer }) => {
   issuerSelect.append(o);
 });
 
-/*  ---------------------------------------------------------------------------
-    2.  Core render helpers
-    --------------------------------------------------------------------------- */
+issuerSelect.addEventListener('change', () => {
+  const key = issuerSelect.value.toLowerCase();
+  const path = issuerIcons[`/src/assets/icons/issuers/${key}.svg`];
+  if (path) {
+    issuerPreview.src = path;
+    issuerPreview.style.opacity = '1';
+  } else {
+    issuerPreview.src = '';
+    issuerPreview.style.opacity = '0';
+  }
+});
 
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  2. Core render helpers                                                   */
+/* ────────────────────────────────────────────────────────────────────────── */
 /** Clears results and state */
 function clearResults() {
   cardsGrid.innerHTML = '';
-  tbodyLegacy.innerHTML = '';           // keeps old table empty as well
+  tbodyLegacy.innerHTML = '';  // keep legacy table empty
   msg.textContent = '';
   selectedCard = null;
 }
@@ -61,26 +77,24 @@ function buildCard(r: ReturnType<typeof buildComparisonTable>[number]) {
   card.innerHTML = `
     <div class="installments">${r.installments}×</div>
     <div class="per">${brl.format(r.perInstallment)}</div>
-    <div class="total">Total&nbsp;${brl.format(r.finalPrice)}</div>
-    <div class="surcharge">Acréscimo&nbsp;${brl.format(r.surcharge)} 
-         (${r.extraPaidPercent.toFixed(2)} %)</div>
+    <div class="total">Total ${brl.format(r.finalPrice)}</div>
+    <div class="surcharge">Acréscimo ${brl.format(r.surcharge)} (${r.extraPaidPercent.toFixed(2)} %)</div>
   `;
   return card;
 }
 
-/*  ---------------------------------------------------------------------------
-    3.  Event wiring
-    --------------------------------------------------------------------------- */
-
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  3. Event wiring                                                          */
+/* ────────────────────────────────────────────────────────────────────────── */
 let selectedCard: HTMLDivElement | null = null;
 
-/*  Main "Calcular" click handler   */
+/* Main “Calcular” click handler */
 calcBtn.addEventListener('click', () => {
   clearResults();
 
-  /* Input validation ------------------------------------------------------ */
+  // Input validation
   const issuer = issuerSelect.value;
-  const base = parseFloat(priceInput.value);
+  const base   = parseFloat(priceInput.value);
 
   if (!issuer) {
     msg.textContent = 'Selecione a bandeira.';
@@ -91,7 +105,7 @@ calcBtn.addEventListener('click', () => {
     return;
   }
 
-  /* Fetch table + build results ------------------------------------------ */
+  // Fetch table + build cards
   const table = getIssuerTable(issuer);
   if (!table) {
     msg.textContent = 'Tabela não encontrada.';
@@ -99,42 +113,45 @@ calcBtn.addEventListener('click', () => {
   }
 
   const rows = buildComparisonTable(base, table, getSimples());
-
-  rows.forEach((r) => {
+  rows.forEach(r => {
     const card = buildCard(r);
 
-    /* click‑to‑select behaviour */
+    // Click‑to‑select behavior
     card.addEventListener('click', () => {
       if (selectedCard) selectedCard.classList.remove('selected');
       card.classList.add('selected');
       selectedCard = card;
+      // Keep chosen card centered in view
+      selectedCard.scrollIntoView({ block: 'center', behavior: 'smooth' });
     });
 
     cardsGrid.append(card);
   });
 
-  /* Scroll to the grid for visibility on mobile */
+  // Scroll to the grid for visibility on mobile
   cardsGrid.scrollIntoView({ behavior: 'smooth' });
 });
 
-/*  Keyboard support – press Enter inside price field triggers Calcular */
-priceInput.addEventListener('keydown', (e) => {
+/* Keyboard support – press Enter inside price field triggers Calcular */
+priceInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') calcBtn.click();
 });
 
-/*  Reset button */
+/* Reset button */
 resetBtn.addEventListener('click', () => {
   priceInput.value = '';
   issuerSelect.value = '';
+  issuerPreview.src = '';
+  issuerPreview.style.opacity = '0';
   clearResults();
 });
 
-/*  ---------------------------------------------------------------------------
-    4.  Wire up the gear‑icon <img> src to the imported SVG URL
-    --------------------------------------------------------------------------- */
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  4. Wire up the gear‑icon <img> src to the imported SVG URL              */
+/* ────────────────────────────────────────────────────────────────────────── */
 const gearImg = document.getElementById('gear-icon') as HTMLImageElement;
 gearImg.src = GearIcon;
 
-/*  ---------------------------------------------------------------------------
-    End of module
-    --------------------------------------------------------------------------- */
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  End of module                                                            */
+/* ────────────────────────────────────────────────────────────────────────── */

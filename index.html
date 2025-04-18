@@ -7,7 +7,10 @@
   <title>Calculadora de Parcelamento</title>
 
   <!-- Typefaces -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto+Mono:wght@400&display=swap"
+    rel="stylesheet"
+  />
 
   <!-- Global styles -->
   <link rel="stylesheet" href="./style.css" />
@@ -38,32 +41,39 @@
       <section class="panel-left glass">
 
         <label for="issuer">Bandeira</label>
-        <select id="issuer">
-          <option value="">-- escolha --</option>
-          <!-- opções são injetadas via main.ts -->
-        </select>
+        <div class="issuer-field">
+          <select id="issuer">
+            <option value="">-- escolha --</option>
+            <!-- opções são injetadas via main.ts -->
+          </select>
+          <!-- issuer logo preview -->
+          <img
+            id="issuer-preview"
+            class="issuer-preview"
+            alt=""
+            aria-hidden="true"
+          />
+        </div>
 
         <label for="price">Valor da compra (R$)</label>
         <input id="price" type="number" step="0.01" min="0" />
 
         <div class="btn-row">
-          <button id="calc"  class="btn primary">Calcular</button>
+          <button id="calc" class="btn primary">Calcular</button>
           <button id="reset" class="btn secondary">Resetar</button>
         </div>
 
         <div id="msg" class="msg"></div>
       </section>
 
-
       <!-- RIGHT ––––––––––––––––––––––––––––––––––––––––––––––––––– -->
       <section class="panel-right glass">
-
-        <!-- 3 × 4 responsive card grid                     -->
+        <!-- 3 × n responsive card grid -->
         <div id="cards" class="cards-grid">
           <!-- cards are rendered here by main.ts -->
         </div>
 
-        <!-- Fallback table kept for progressive refactor   -->
+        <!-- Fallback table kept for progressive refactor -->
         <table id="legacy-table" hidden>
           <thead>
             <tr>
@@ -76,9 +86,7 @@
           </thead>
           <tbody id="tbody"></tbody>
         </table>
-
       </section>
-
     </div><!-- /.content -->
   </main>
 
@@ -87,9 +95,9 @@
        ——————————————————————————————————————————————————————————— -->
   <script type="module" src="/src/main.ts"></script>
   <script type="module">
-    /* small inline helper: clicking the gear opens settings page */
+    /* clicking the gear opens the settings page */
     document.getElementById('gear-btn')?.
-            addEventListener('click', () => location.href = './settings.html');
+      addEventListener('click', () => location.href = './settings.html');
   </script>
 </body>
 </html>
