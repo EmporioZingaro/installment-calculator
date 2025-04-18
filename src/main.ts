@@ -2,6 +2,7 @@
     src/main.ts – UI controller (v2, card‑grid layout) with logo preview & UX tweaks
     --------------------------------------------------------------------------- */
 
+import '../style.css';
 import { buildComparisonTable } from './fees';
 import { issuerTables, getIssuerTable } from './issuers';
 
