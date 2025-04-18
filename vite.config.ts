@@ -10,7 +10,7 @@ export default defineConfig({
         name: 'Calculadora de Parcelamento',
         short_name: 'Parcelas',
         icons: [
-          { src: '/logo.svg', sizes: '192x192', type: 'image/svg+xml' }
+          { src: './logo.svg', sizes: '192x192', type: 'image/svg+xml' }
         ],
         start_url: '/',
         display: 'standalone',
