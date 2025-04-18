@@ -8,6 +8,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
+  "pnpm": {
+    "allowWorkspaceRoot": true
+  },
   "devDependencies": {
     "typescript": "~5.7.2",
     "vite": "^6.3.1",
