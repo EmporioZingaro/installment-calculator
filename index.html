@@ -9,33 +9,30 @@
 <body>
   <main class="container">
     <header>
-      <img src="./logo.svg" alt="Logo" width="48" height="48">
+      <img src="./logo.svg" alt="Logo" width="48">
       <h1>Calculadora de Parcelamento</h1>
     </header>
 
-    <label for="issuer">Bandeira</label>
-    <select id="issuer">
-      <option value="">-- escolha --</option>
-      <!-- opções preenchidas via JS -->
-    </select>
+    <label>Bandeira
+      <select id="issuer">
+        <option value="">-- escolha --</option>
+      </select>
+    </label>
 
-    <label for="price">Valor da compra (R$)</label>
-    <input id="price" type="number" step="0.01" min="0" value="100.00">
+    <label>Valor da compra (R$)
+      <input id="price" type="number" step="0.01" min="0" value="100.00">
+    </label>
 
     <button id="calc">Calcular</button>
     <div id="msg"></div>
 
-    <p style="margin-top:1rem"><a href="/settings.html">Configurações</a></p>
+    <p><a href="./settings.html">Configurações</a></p>
 
     <table>
       <thead>
         <tr>
-          <th>Parcelas</th>
-          <th>Taxa %</th>
-          <th>Valor Parcela</th>
-          <th>Total</th>
-          <th>Acréscimo R$</th>
-          <th>Acréscimo %</th>
+          <th>Parcelas</th><th>Taxa %</th><th>Valor Parcela</th>
+          <th>Total</th><th>Acréscimo R$</th><th>Acréscimo %</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>

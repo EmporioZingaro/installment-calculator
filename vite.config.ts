@@ -3,17 +3,15 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'path';
 
 export default defineConfig({
-  base: './',
+  base: './',                        // relative URLs for GitHub Pages
   plugins: [
     VitePWA({
       registerType: 'prompt',
       manifest: {
         name: 'Calculadora de Parcelamento',
         short_name: 'Parcelas',
-        icons: [
-          { src: 'logo.svg', sizes: '192x192', type: 'image/svg+xml' }
-        ],
-        start_url: '/',
+        icons: [ { src: 'logo.svg', sizes: '192x192', type: 'image/svg+xml' } ],
+        start_url: './',
         display: 'standalone',
         background_color: '#f5f5f7',
         theme_color: '#0066c0'
@@ -24,7 +22,6 @@ export default defineConfig({
       }
     })
   ],
-
   build: {
     rollupOptions: {
       input: {
