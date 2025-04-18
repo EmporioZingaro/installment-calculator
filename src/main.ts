@@ -32,7 +32,6 @@ btn.addEventListener('click', ()=>{
     if(r.extraPaidPercent===minExtra)tr.classList.add('best');
     tr.innerHTML=`
       <td>${r.installments}×</td>
-      <td>${r.feePercent.toFixed(2)} %</td>
       <td>${brl.format(r.perInstallment)}</td>
       <td>${brl.format(r.finalPrice)}</td>
       <td>${brl.format(r.surcharge)}</td>
