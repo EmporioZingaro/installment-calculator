@@ -1,108 +1,90 @@
-import { buildComparisonTable, IssuerTable } from './fees';
+import { buildComparisonTable } from './fees';
+import { issuerTables, getIssuerTable } from './issuers';
 
-// -----------------------------------------------------------------------------
-// Configs
-// -----------------------------------------------------------------------------
+/* ---------------------------------------------------------- */
+/* Helpers                                                    */
+/* ---------------------------------------------------------- */
 
-const issuers = [
-  'Visa',
-  'Mastercard',
-  'Elo',
-  'Hipercard',
-  'Cabal',
-  'Diners',
-  'JCB',
-  'Sorocred'
-];
-
+// Brazilian currency formatter
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL'
 });
 
-// -----------------------------------------------------------------------------
-// Utils
-// -----------------------------------------------------------------------------
-
+// Read Simples rate saved in settings (default 5 %)
 function getSimplesDecimal(): number {
   const stored = parseFloat(localStorage.getItem('simplesRate') ?? '5');
-  return stored / 100; // convert “5” → 0.05
+  return stored / 100; // e.g. "5" → 0.05
 }
 
-async function loadIssuerTable(name: string): Promise<IssuerTable> {
-  const buster = localStorage.getItem('jsonCacheBuster') ?? '0';
-  const file = `/data/${name.toLowerCase()}.json?v=${buster}`;
-  const res = await fetch(file, { cache: 'reload' });
-  if (!res.ok) throw new Error(`Tabela não encontrada: ${file}`);
-  return res.json();
-}
-
-// -----------------------------------------------------------------------------
-// DOM references
-// -----------------------------------------------------------------------------
+/* ---------------------------------------------------------- */
+/* DOM references                                             */
+/* ---------------------------------------------------------- */
 
 const issuerSelect = document.getElementById('issuer') as HTMLSelectElement;
-const priceInput = document.getElementById('price') as HTMLInputElement;
-const calcBtn = document.getElementById('calc') as HTMLButtonElement;
-const tbody = document.getElementById('tbody') as HTMLTableSectionElement;
-const msg = document.getElementById('msg') as HTMLDivElement;
+const priceInput   = document.getElementById('price')  as HTMLInputElement;
+const calcBtn      = document.getElementById('calc')   as HTMLButtonElement;
+const tbody        = document.getElementById('tbody')  as HTMLTableSectionElement;
+const msg          = document.getElementById('msg')    as HTMLDivElement;
 
-// -----------------------------------------------------------------------------
-// Populate dropdown
-// -----------------------------------------------------------------------------
+/* ---------------------------------------------------------- */
+/* Populate issuer dropdown automatically                     */
+/* ---------------------------------------------------------- */
 
-issuers.forEach((brand) => {
+issuerTables.forEach(({ issuer }) => {
   const opt = document.createElement('option');
-  opt.value = brand;
-  opt.textContent = brand;
+  opt.value = opt.textContent = issuer;
   issuerSelect.appendChild(opt);
 });
 
-// -----------------------------------------------------------------------------
-// Main Action
-// -----------------------------------------------------------------------------
+/* ---------------------------------------------------------- */
+/* Main action                                                */
+/* ---------------------------------------------------------- */
 
-calcBtn.addEventListener('click', async () => {
+calcBtn.addEventListener('click', () => {
   tbody.innerHTML = '';
   msg.textContent = '';
 
-  const issuer = issuerSelect.value;
-  const base = parseFloat(priceInput.value);
+  const issuerName = issuerSelect.value;
+  const basePrice  = parseFloat(priceInput.value);
 
-  if (!issuer) {
+  if (!issuerName) {
     msg.textContent = 'Selecione a bandeira.';
     return;
   }
-
-  if (isNaN(base) || base <= 0) {
+  if (isNaN(basePrice) || basePrice <= 0) {
     msg.textContent = 'Digite um valor válido.';
     return;
   }
 
-  try {
-    const issuerData = await loadIssuerTable(issuer);
-    const table = buildComparisonTable(base, issuerData, getSimplesDecimal());
-
-    const minExtra = Math.min(...table.map((r) => r.extraPaidPercent));
-
-    table.forEach((row) => {
-      const tr = document.createElement('tr');
-      if (row.extraPaidPercent === minExtra) {
-        tr.classList.add('best');
-      }
-
-      tr.innerHTML = `
-        <td>${row.installments}×</td>
-        <td>${row.feePercent.toFixed(2)} %</td>
-        <td>${brl.format(row.perInstallment)}</td>
-        <td>${brl.format(row.finalPrice)}</td>
-        <td>${brl.format(row.surcharge)}</td>
-        <td>${row.extraPaidPercent.toFixed(2)} %</td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-  } catch (err: any) {
-    msg.textContent = err.message || 'Erro ao carregar a tabela.';
+  // Get table already loaded in memory
+  const issuerData = getIssuerTable(issuerName);
+  if (!issuerData) {
+    msg.textContent = `Tabela não encontrada para ${issuerName}.`;
+    return;
   }
+
+  // Build comparison rows
+  const table = buildComparisonTable(
+    basePrice,
+    issuerData,
+    getSimplesDecimal()
+  );
+
+  // Render
+  table.forEach((row) => {
+    const tr = document.createElement('tr');
+    if (row.extraPaidPercent === minExtra) tr.classList.add('best');
+
+    tr.innerHTML = `
+      <td>${row.installments}×</td>
+      <td>${row.feePercent.toFixed(2)} %</td>
+      <td>${brl.format(row.perInstallment)}</td>
+      <td>${brl.format(row.finalPrice)}</td>
+      <td>${brl.format(row.surcharge)}</td>
+      <td>${row.extraPaidPercent.toFixed(2)} %</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
 });

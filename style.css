@@ -93,6 +93,3 @@ tbody tr:hover { background: #f0f8ff; }
 
 /* zebra stripes */
 tbody tr:nth-child(even) { background: #fafafa; }
-
-/* highlight the cheapest surcharge row */
-tbody tr.best { background: #dff6d8 !important; }
