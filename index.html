@@ -88,8 +88,8 @@
   <script type="module" src="/src/main.ts"></script>
   <script type="module">
     /* small inline helper: clicking the gear opens settings page */
-    document.getElementById('gear-btn')!
-            .addEventListener('click', () => location.href = './settings.html');
+    document.getElementById('gear-btn')?.
+            addEventListener('click', () => location.href = './settings.html');
   </script>
 </body>
 </html>
