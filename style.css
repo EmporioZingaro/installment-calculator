@@ -114,3 +114,13 @@ tbody tr:hover {
 tbody tr:nth-child(even) {
   background: #fafafa;
 }
+
+/* ------------- RESET BUTTON ----------------------------------- */
+button.secondary {
+  background: #eee;
+  color: #333;
+}
+
+button.secondary:hover {
+  filter: brightness(0.95);
+}

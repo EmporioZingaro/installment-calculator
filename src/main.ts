@@ -1,6 +1,7 @@
 import { buildComparisonTable } from './fees';
 import { issuerTables, getIssuerTable } from './issuers';
 
+const resetBtn = document.getElementById('reset') as HTMLButtonElement;
 const brl = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const getSimples = () => (parseFloat(localStorage.getItem('simplesRate')??'5'))/100;
 
@@ -38,4 +39,10 @@ btn.addEventListener('click', ()=>{
       <td>${r.extraPaidPercent.toFixed(2)} %</td>`;
     tbody.append(tr);
   });
+});
+
+resetBtn.addEventListener('click', () => {
+  priceInput.value = '';
+  tbody.innerHTML = '';
+  msg.textContent = '';
 });
