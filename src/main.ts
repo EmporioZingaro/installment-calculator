@@ -71,6 +71,9 @@ calcBtn.addEventListener('click', () => {
     getSimplesDecimal()
   );
 
+  // Find the line with the lowest percentage extra paid
+  const minExtra = Math.min(...table.map(r => r.extraPaidPercent));
+
   // Render
   table.forEach((row) => {
     const tr = document.createElement('tr');

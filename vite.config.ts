@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [
     VitePWA({
-      registerType: 'prompt',      // browser shows “Add to home screen”
+      registerType: 'prompt',
       manifest: {
         name: 'Calculadora de Parcelamento',
         short_name: 'Parcelas',
@@ -21,5 +22,14 @@ export default defineConfig({
         cleanupOutdatedCaches: true
       }
     })
-  ]
+  ],
+
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        settings: resolve(__dirname, 'settings.html')
+      }
+    }
+  }
 });

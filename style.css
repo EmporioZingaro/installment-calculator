@@ -91,5 +91,5 @@ thead { background: #fafafa; }
 
 tbody tr:hover { background: #f0f8ff; }
 
-/* zebra stripes */
+/* ------------- ZEBRA STRIPES ----------------------------------- */
 tbody tr:nth-child(even) { background: #fafafa; }
