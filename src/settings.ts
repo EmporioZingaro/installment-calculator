@@ -14,5 +14,6 @@ saveBtn.onclick = ()=>{
 
 refreshBtn.onclick=()=>{
   localStorage.setItem('jsonCacheBuster',Date.now().toString());
-  msg.textContent='Tabelas serão baixadas novamente.';
+  msg.textContent='Tabelas serão atualizadas no próximo cálculo.';
 };
+
