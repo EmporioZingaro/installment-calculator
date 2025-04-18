@@ -1,15 +1,12 @@
 /*  ---------------------------------------------------------------------------
-    src/main.ts – UI controller (v2, card‑grid layout) with logo preview & UX tweaks
+    src/main.ts – UI controller (v3, inline logos, row‑wise flow, two‑column grid)
     --------------------------------------------------------------------------- */
 
 import '../style.css';
 import { buildComparisonTable } from './fees';
 import { issuerTables, getIssuerTable } from './issuers';
-
-// Import our bundled gear‑icon SVG (via the `@` alias in Vite)
 import GearIcon from '@/assets/icons/gear.svg';
 
-// Import all issuer logos so we can preview the selected brand
 const issuerIcons = import.meta.glob<string>(
   '@/assets/icons/issuers/*.svg',
   { eager: true, import: 'default' }
@@ -25,16 +22,16 @@ const brl = new Intl.NumberFormat('pt-BR', {
 
 const $ = (id: string) => document.getElementById(id)!;
 
-const issuerSelect   = $('issuer')           as HTMLSelectElement;
-const issuerPreview  = $('issuer-preview')  as HTMLImageElement;
-const priceInput     = $('price')           as HTMLInputElement;
-const calcBtn        = $('calc')            as HTMLButtonElement;
-const resetBtn       = $('reset')           as HTMLButtonElement;
-const msg            = $('msg')             as HTMLDivElement;
-const cardsGrid      = $('cards')           as HTMLDivElement;          
-const tbodyLegacy    = $('tbody')           as HTMLTableSectionElement;
+const issuerSelect  = $('issuer')          as HTMLSelectElement;
+const issuerPreview = $('issuer-preview')  as HTMLImageElement;
+const priceInput    = $('price')           as HTMLInputElement;
+const calcBtn       = $('calc')            as HTMLButtonElement;
+const resetBtn      = $('reset')           as HTMLButtonElement;
+const msg           = $('msg')             as HTMLDivElement;
+const cardsGrid     = $('cards')           as HTMLDivElement;
+const tbodyLegacy   = $('tbody')           as HTMLTableSectionElement;
 
-/*  Simples Nacional stored per‑device in localStorage (default 5 %)      */
+/*  Simples Nacional stored per‑device in localStorage (default 5 %) */
 const getSimples = () =>
   (parseFloat(localStorage.getItem('simplesRate') ?? '5')) / 100;
 
@@ -66,7 +63,7 @@ issuerSelect.addEventListener('change', () => {
 /** Clears results and state */
 function clearResults() {
   cardsGrid.innerHTML = '';
-  tbodyLegacy.innerHTML = '';  // keep legacy table empty
+  tbodyLegacy.innerHTML = '';
   msg.textContent = '';
   selectedCard = null;
 }
@@ -96,7 +93,6 @@ calcBtn.addEventListener('click', () => {
   // Input validation
   const issuer = issuerSelect.value;
   const base   = parseFloat(priceInput.value);
-
   if (!issuer) {
     msg.textContent = 'Selecione a bandeira.';
     return;
@@ -114,6 +110,12 @@ calcBtn.addEventListener('click', () => {
   }
 
   const rows = buildComparisonTable(base, table, getSimples());
+
+  // 3‑row cap, adjust columns
+  const MAX_ROWS = 3;
+  const cols = Math.ceil(rows.length / MAX_ROWS);
+  cardsGrid.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+
   rows.forEach(r => {
     const card = buildCard(r);
 
@@ -122,7 +124,6 @@ calcBtn.addEventListener('click', () => {
       if (selectedCard) selectedCard.classList.remove('selected');
       card.classList.add('selected');
       selectedCard = card;
-      // Keep chosen card centered in view
       selectedCard.scrollIntoView({ block: 'center', behavior: 'smooth' });
     });
 
@@ -152,6 +153,8 @@ resetBtn.addEventListener('click', () => {
 /* ────────────────────────────────────────────────────────────────────────── */
 const gearImg = document.getElementById('gear-icon') as HTMLImageElement;
 gearImg.src = GearIcon;
+gearImg.width = 18;
+gearImg.height = 18;
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  End of module                                                            */
