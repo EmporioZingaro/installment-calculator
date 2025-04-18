@@ -3,31 +3,49 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'path';
 
 export default defineConfig({
-  base: './',                        // relative URLs for GitHub Pages
+  base: './',  
+
+  // —————————————————————————————————————————————————————
+  // Allow absolute imports from `src/` via the “@” alias
+  // —————————————————————————————————————————————————————
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
+
+  // —————————————————————————————————————————————————————
+  // Make sure Vite bundles our SVGs from src/assets/icons
+  // —————————————————————————————————————————————————————
+  assetsInclude: ['**/*.svg'],
+
   plugins: [
     VitePWA({
       registerType: 'prompt',
       manifest: {
         name: 'Calculadora de Parcelamento',
         short_name: 'Parcelas',
-        icons: [ { src: 'logo.svg', sizes: '192x192', type: 'image/svg+xml' } ],
+        icons: [
+          { src: 'logo.svg', sizes: '192x192', type: 'image/svg+xml' }
+        ],
         start_url: './',
         display: 'standalone',
         background_color: '#f5f5f7',
-        theme_color: '#0066c0'
+        theme_color: '#0066c0',
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,json}'],
-        cleanupOutdatedCaches: true
-      }
-    })
+        cleanupOutdatedCaches: true,
+      },
+    }),
   ],
+
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        settings: resolve(__dirname, 'settings.html')
-      }
-    }
-  }
+        main:     resolve(__dirname, 'index.html'),
+        settings: resolve(__dirname, 'settings.html'),
+      },
+    },
+  },
 });

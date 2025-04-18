@@ -11,11 +11,11 @@ const preferredOrder = [
   'Visa',
   'Mastercard',
   'Elo',
+  'Diners',
   'Hipercard',
-  'Cabal',
-  'Sorocred',
   'JCB',
-  'Diners'
+  'Sorocred',
+  'Cabal'
 ];
 
 // Custom sort function:

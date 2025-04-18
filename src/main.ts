@@ -1,37 +1,87 @@
+/*  ---------------------------------------------------------------------------
+    src/main.ts – UI controller (v2, card‑grid layout)
+    --------------------------------------------------------------------------- */
+
 import { buildComparisonTable } from './fees';
 import { issuerTables, getIssuerTable } from './issuers';
 
-const brl = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
-const getSimples = () => (parseFloat(localStorage.getItem('simplesRate') ?? '5'))/100;
+// Import our bundled gear‑icon SVG (via the `@` alias in Vite)
+import GearIcon from '@/assets/icons/gear.svg';
 
-const $ = (id:string)=>document.getElementById(id)!;
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  Utilities and shorthand selectors                                        */
+/* ────────────────────────────────────────────────────────────────────────── */
+
+const brl = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL'
+});
+
+const $ = (id: string) => document.getElementById(id)!;
+
 const issuerSelect = $('issuer') as HTMLSelectElement;
 const priceInput   = $('price')  as HTMLInputElement;
 const calcBtn      = $('calc')   as HTMLButtonElement;
 const resetBtn     = $('reset')  as HTMLButtonElement;
-const tbody        = $('tbody')  as HTMLTableSectionElement;
 const msg          = $('msg')    as HTMLDivElement;
 
-// populate issuers
-issuerTables.forEach(({issuer})=>{
+const cardsGrid    = $('cards')  as HTMLDivElement;          // new result area
+const tbodyLegacy  = $('tbody')  as HTMLTableSectionElement; // retained but hidden
+
+/*  Simples Nacional stored per‑device in localStorage (default 5 %) */
+const getSimples = () =>
+  (parseFloat(localStorage.getItem('simplesRate') ?? '5')) / 100;
+
+/*  ---------------------------------------------------------------------------
+    1.  Dropdown population (text‑only; logo injection is tackled later)
+    --------------------------------------------------------------------------- */
+issuerTables.forEach(({ issuer }) => {
   const o = document.createElement('option');
-  o.value = o.textContent = issuer;
+  o.value = issuer;
+  o.textContent = issuer;
   issuerSelect.append(o);
 });
 
-let selectedRow: HTMLTableRowElement | null = null;
+/*  ---------------------------------------------------------------------------
+    2.  Core render helpers
+    --------------------------------------------------------------------------- */
 
-calcBtn.addEventListener('click', () => {
-  // clear previous results and messages
-  tbody.innerHTML = '';
+/** Clears results and state */
+function clearResults() {
+  cardsGrid.innerHTML = '';
+  tbodyLegacy.innerHTML = '';           // keeps old table empty as well
   msg.textContent = '';
-  selectedRow = null;
+  selectedCard = null;
+}
 
-  // read inputs
+/** Builds a single result card element */
+function buildCard(r: ReturnType<typeof buildComparisonTable>[number]) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="installments">${r.installments}×</div>
+    <div class="per">${brl.format(r.perInstallment)}</div>
+    <div class="total">Total&nbsp;${brl.format(r.finalPrice)}</div>
+    <div class="surcharge">Acréscimo&nbsp;${brl.format(r.surcharge)} 
+         (${r.extraPaidPercent.toFixed(2)} %)</div>
+  `;
+  return card;
+}
+
+/*  ---------------------------------------------------------------------------
+    3.  Event wiring
+    --------------------------------------------------------------------------- */
+
+let selectedCard: HTMLDivElement | null = null;
+
+/*  Main "Calcular" click handler   */
+calcBtn.addEventListener('click', () => {
+  clearResults();
+
+  /* Input validation ------------------------------------------------------ */
   const issuer = issuerSelect.value;
-  const base   = parseFloat(priceInput.value);
+  const base = parseFloat(priceInput.value);
 
-  // validation
   if (!issuer) {
     msg.textContent = 'Selecione a bandeira.';
     return;
@@ -41,7 +91,7 @@ calcBtn.addEventListener('click', () => {
     return;
   }
 
-  // fetch table and build rows
+  /* Fetch table + build results ------------------------------------------ */
   const table = getIssuerTable(issuer);
   if (!table) {
     msg.textContent = 'Tabela não encontrada.';
@@ -50,32 +100,41 @@ calcBtn.addEventListener('click', () => {
 
   const rows = buildComparisonTable(base, table, getSimples());
 
-  rows.forEach(r => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${r.installments}×</td>
-      <td>${brl.format(r.perInstallment)}</td>
-      <td>${brl.format(r.finalPrice)}</td>
-      <td>${brl.format(r.surcharge)}</td>
-      <td>${r.extraPaidPercent.toFixed(2)} %</td>
-    `;
-    // row selection handler
-    tr.addEventListener('click', () => {
-      if (selectedRow) selectedRow.classList.remove('selected');
-      tr.classList.add('selected');
-      selectedRow = tr;
+  rows.forEach((r) => {
+    const card = buildCard(r);
+
+    /* click‑to‑select behaviour */
+    card.addEventListener('click', () => {
+      if (selectedCard) selectedCard.classList.remove('selected');
+      card.classList.add('selected');
+      selectedCard = card;
     });
-    tbody.append(tr);
+
+    cardsGrid.append(card);
   });
 
-  // Auto‑scroll the last row into view
-  tbody.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+  /* Scroll to the grid for visibility on mobile */
+  cardsGrid.scrollIntoView({ behavior: 'smooth' });
 });
 
+/*  Keyboard support – press Enter inside price field triggers Calcular */
+priceInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') calcBtn.click();
+});
+
+/*  Reset button */
 resetBtn.addEventListener('click', () => {
   priceInput.value = '';
   issuerSelect.value = '';
-  tbody.innerHTML = '';
-  msg.textContent = '';
-  selectedRow = null;
+  clearResults();
 });
+
+/*  ---------------------------------------------------------------------------
+    4.  Wire up the gear‑icon <img> src to the imported SVG URL
+    --------------------------------------------------------------------------- */
+const gearImg = document.getElementById('gear-icon') as HTMLImageElement;
+gearImg.src = GearIcon;
+
+/*  ---------------------------------------------------------------------------
+    End of module
+    --------------------------------------------------------------------------- */
