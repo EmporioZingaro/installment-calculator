@@ -11,9 +11,15 @@
 /* ------------- GLOBAL RESET ----------------------------------- */
 *,
 *::before,
-*::after { box-sizing: border-box; }
+*::after {
+  box-sizing: border-box;
+}
 
-html,body { margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, sans-serif;
+}
 
 body {
   background: var(--bg);
@@ -34,13 +40,15 @@ body {
 
 /* ------------- HEADER ----------------------------------------- */
 header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+  text-align: center;
   margin-bottom: 1.25rem;
 }
 
-header img { width: 48px; height: 48px; }
+.logo {
+  display: block;
+  width: 96px;
+  margin: 0 auto 0.5rem;
+}
 
 /* ------------- FORM ------------------------------------------- */
 label {
@@ -66,9 +74,14 @@ button {
   margin-top: 1rem;
 }
 
-button:hover { filter: brightness(1.1); }
+button:hover {
+  filter: brightness(1.1);
+}
 
-#msg { color: #c00; margin-top: .5rem; }
+#msg {
+  color: #c00;
+  margin-top: .5rem;
+}
 
 /* ------------- TABLE ------------------------------------------ */
 table {
@@ -85,11 +98,19 @@ th, td {
 }
 
 th:nth-child(1),
-td:nth-child(1) { text-align: center; }
+td:nth-child(1) {
+  text-align: center;
+}
 
-thead { background: #fafafa; }
+thead {
+  background: #fafafa;
+}
 
-tbody tr:hover { background: #f0f8ff; }
+tbody tr:hover {
+  background: #f0f8ff;
+}
 
-/* ------------- ZEBRA STRIPES ----------------------------------- */
-tbody tr:nth-child(even) { background: #fafafa; }
+/* ------------- ZEBRA STRIPES ---------------------------------- */
+tbody tr:nth-child(even) {
+  background: #fafafa;
+}
