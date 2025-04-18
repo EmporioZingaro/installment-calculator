@@ -3,6 +3,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'path';
 
 export default defineConfig({
+  base: './',
   plugins: [
     VitePWA({
       registerType: 'prompt',
@@ -10,7 +11,7 @@ export default defineConfig({
         name: 'Calculadora de Parcelamento',
         short_name: 'Parcelas',
         icons: [
-          { src: './logo.svg', sizes: '192x192', type: 'image/svg+xml' }
+          { src: 'logo.svg', sizes: '192x192', type: 'image/svg+xml' }
         ],
         start_url: '/',
         display: 'standalone',
