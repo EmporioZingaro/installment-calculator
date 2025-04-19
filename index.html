@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculadora de Parcelamento</title>
+  <title>Calculadora de Parcelamento</title>
 
   <!-- Typefaces -->
   <link
@@ -21,8 +21,8 @@
   <!-- App shell -->
   <main class="container two-col">
     <header class="app-header">
-      <img src="./logo.svg" alt="Logo Empório Zingaro" class="logo" />
-      <h1>Calculadora de Parcelamento</h1>
+      <img src="./logo.svg" alt="Logo Empório Zingaro" class="logo" />
+      <h1>Calculadora de Parcelamento</h1>
     </header>
 
     <div class="content">
@@ -64,14 +64,18 @@
 
       <!-- RIGHT panel -->
       <section class="panel-right glass">
+        <div id="placeholder" class="placeholder">
+          <p>Selecione uma bandeira e insira o valor da compra para ver as opções de parcelamento.</p>
+        </div>
+
         <div id="cards" class="cards-grid"></div>
 
         <!-- Hidden legacy table (fallback) -->
         <table id="legacy-table" hidden>
           <thead>
             <tr>
-              <th>Parcelas</th><th>Valor Parcela</th><th>Total</th>
-              <th>Acréscimo R$</th><th>Acréscimo %</th>
+              <th>Parcelas</th><th>Valor Parcela</th><th>Total</th>
+              <th>Acréscimo R$</th><th>Acréscimo %</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>

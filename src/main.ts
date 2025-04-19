@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------
-   src/main.ts – v3: custom combobox, fixed grid, issuer icons, card grid
+   src/main.ts – v4: animated layout shift + issuer icon combobox
 --------------------------------------------------------------------------- */
 import '../style.css';
 import { buildComparisonTable } from './fees';
@@ -29,6 +29,10 @@ const resetBtn   = $('reset')   as HTMLButtonElement;
 const msg        = $('msg')     as HTMLDivElement;
 const cardsGrid  = $('cards')   as HTMLDivElement;
 const tbody      = $('tbody')   as HTMLTableSectionElement;
+const placeholder = $('placeholder') as HTMLDivElement | null;
+
+const panelLeft  = document.querySelector('.panel-left')  as HTMLDivElement;
+const panelRight = document.querySelector('.panel-right') as HTMLDivElement;
 
 /* helpers */
 const getSimples = () => (parseFloat(localStorage.getItem('simplesRate') ?? '5'))/100;
@@ -112,7 +116,8 @@ selectIssuer('');
 /* --------------------------------------------------------------------- */
 function clearResults(){
   cardsGrid.innerHTML=''; tbody.innerHTML=''; msg.textContent='';
-  cardsGrid.style.gridTemplateColumns='';                      // reset grid
+  cardsGrid.style.gridTemplateColumns='';
+  if (placeholder) placeholder.style.display = 'block';
 }
 
 function buildCard(r:ReturnType<typeof buildComparisonTable>[number]){
@@ -149,6 +154,11 @@ calcBtn.addEventListener('click',()=>{
     });
     cardsGrid.append(card);
   });
+  if (placeholder) placeholder.style.display = 'none';
+
+  panelLeft.classList.add('hidden');
+  panelRight.classList.add('expanded');
+
   cardsGrid.scrollIntoView({behavior:'smooth'});
 });
 
@@ -159,6 +169,8 @@ priceInput.addEventListener('keydown',e=>{ if(e.key==='Enter') calcBtn.click(); 
 resetBtn.addEventListener('click',()=>{
   priceInput.value=''; nativeSelect.value=''; selectIssuer('');
   clearResults();
+  panelLeft.classList.remove('hidden');
+  panelRight.classList.remove('expanded');
 });
 
 /* gear icon */
