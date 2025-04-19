@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------------------
-   src/main.ts – v4: State-driven layout, centered results, animations
+   src/main.ts – v4.1: Fixed selectIssuer scope issue
 --------------------------------------------------------------------------- */
 import '../style.css';
-import { buildComparisonTable, CalcResult } from './fees'; // Added CalcResult type
+import { buildComparisonTable, CalcResult } from './fees';
 import { issuerTables, getIssuerTable } from './issuers';
 import GearIcon from '@/assets/icons/gear.svg';
 
@@ -21,8 +21,8 @@ const percent = new Intl.NumberFormat('pt-BR', {style: 'decimal', minimumFractio
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 
 /* DOM refs */
-const contentDiv    = $('.content')          as HTMLDivElement; // Main content wrapper
-const nativeSelect  = $('#issuer')           as HTMLSelectElement; // hidden
+const contentDiv    = $('.content')          as HTMLDivElement;
+const nativeSelect  = $('#issuer')           as HTMLSelectElement;
 const combo         = $('#issuer-combo')     as HTMLDivElement;
 const comboLabel    = combo.querySelector('.combo-label') as HTMLSpanElement;
 const comboIcon     = combo.querySelector('.combo-icon')  as HTMLImageElement;
@@ -33,19 +33,48 @@ const calcBtn    = $('#calc')    as HTMLButtonElement;
 const resetBtn   = $('#reset')   as HTMLButtonElement;
 const msg        = $('#msg')     as HTMLDivElement;
 const cardsGrid  = $('#cards')   as HTMLDivElement;
-// const tbody      = $('#tbody')   as HTMLTableSectionElement; // Legacy table not used for display
 
 // State variable for selected card
 let selectedCard: HTMLDivElement | null = null;
 
 /* Helpers */
 const getSimples = () => (parseFloat(localStorage.getItem('simplesRate') ?? '5')) / 100;
-const MAX_ROWS_PER_COLUMN = 3; // How many cards before adding a new column (adjust as needed)
-const PANEL_TRANSITION_DURATION = 400; // Should match --transition-duration in CSS (in ms)
+const MAX_ROWS_PER_COLUMN = 3;
+const PANEL_TRANSITION_DURATION = 400;
 
 /* --------------------------------------------------------------------- */
 /* 1. Initialize State & Combobox                                        */
 /* --------------------------------------------------------------------- */
+
+// --- Moved selectIssuer function here ---
+// Sync selection visual <-> hidden select
+function selectIssuer(value: string) {
+  nativeSelect.value = value; // Update hidden select
+  const selectedTable = getIssuerTable(value);
+  comboLabel.textContent = selectedTable ? selectedTable.issuer : '-- escolha --'; // Display formatted name or placeholder
+
+  const iconFileName = value.toLowerCase().replace(/\s+/g, '');
+  const path = value ? issuerIcons[`/src/assets/icons/issuers/${iconFileName}.svg`] : '';
+  comboIcon.src = path ?? '';
+  comboIcon.alt = value ? `${value} logo` : '';
+  comboIcon.style.opacity = path ? '1' : '0';
+
+  // Highlight selected item in the listbox
+  listbox.querySelectorAll('li').forEach(li => {
+    li.setAttribute('aria-selected', li.dataset.value === value ? 'true' : 'false');
+  });
+  // We still need closeList, define it or move it too if needed elsewhere
+  // Assuming closeList is only needed within setupCombobox for now
+  const listboxElement = $('#issuer-list'); // Re-get ref if needed
+  if (listboxElement) listboxElement.hidden = true;
+  combo.setAttribute('aria-expanded', 'false');
+}
+
+// --- Moved closeList function here ---
+function closeList() {
+    listbox.hidden = true;
+    combo.setAttribute('aria-expanded', 'false');
+}
 
 function initializeApp() {
   // Set initial state class
@@ -54,25 +83,26 @@ function initializeApp() {
 
   // Populate combobox
   issuerTables.forEach(({ issuer }) => {
-    // hidden <option> for semantics
     const opt = document.createElement('option');
     opt.value = issuer;
     opt.textContent = issuer;
     nativeSelect.append(opt);
 
-    // visible <li>
     const li = document.createElement('li');
     li.setAttribute('role', 'option');
     li.dataset.value = issuer;
 
-    const iconFileName = issuer.toLowerCase().replace(/\s+/g, ''); // Handle names like "Hiper Card" if needed
+    const iconFileName = issuer.toLowerCase().replace(/\s+/g, '');
     const iconPath = issuerIcons[`/src/assets/icons/issuers/${iconFileName}.svg`];
     li.innerHTML = `<img src="${iconPath ?? ''}" alt="${issuer} logo" /><span>${issuer}</span>`;
     listbox.append(li);
   });
 
-  // Setup combobox interactions (no changes from previous version needed here)
+  // Setup combobox interactions
   setupCombobox();
+
+  // Set initial empty state for combobox
+  selectIssuer('');
 
   // Set gear icon
   const gearImg = document.getElementById('gear-icon') as HTMLImageElement;
@@ -84,37 +114,14 @@ function initializeApp() {
 }
 
 function setupCombobox() {
-  // Sync selection visual <-> hidden select
-  function selectIssuer(value: string) {
-    nativeSelect.value = value; // Update hidden select
-    const selectedTable = getIssuerTable(value);
-    comboLabel.textContent = selectedTable ? selectedTable.issuer : '-- escolha --'; // Display formatted name or placeholder
-
-    const iconFileName = value.toLowerCase().replace(/\s+/g, '');
-    const path = value ? issuerIcons[`/src/assets/icons/issuers/${iconFileName}.svg`] : '';
-    comboIcon.src = path ?? '';
-    comboIcon.alt = value ? `${value} logo` : '';
-    comboIcon.style.opacity = path ? '1' : '0';
-
-    // Highlight selected item in the listbox
-    listbox.querySelectorAll('li').forEach(li => {
-      li.setAttribute('aria-selected', li.dataset.value === value ? 'true' : 'false');
-    });
-    closeList();
-  }
-
   // Open/close listbox
   function openList() {
     listbox.hidden = false;
     combo.setAttribute('aria-expanded', 'true');
-    // Optional: focus the currently selected item when opening
     const selectedLi = listbox.querySelector<HTMLLIElement>('[aria-selected="true"]');
     selectedLi?.focus();
   }
-  function closeList() {
-    listbox.hidden = true;
-    combo.setAttribute('aria-expanded', 'false');
-  }
+  // closeList is now defined outside
 
   // Event Listeners
   combo.addEventListener('click', () => {
@@ -124,7 +131,8 @@ function setupCombobox() {
   listbox.addEventListener('click', (e) => {
     const li = (e.target as HTMLElement).closest('li');
     if (li && li.dataset.value) {
-      selectIssuer(li.dataset.value);
+      selectIssuer(li.dataset.value); // Calls the outer function
+      // closeList() is called inside selectIssuer now
     }
   });
 
@@ -135,89 +143,57 @@ function setupCombobox() {
     }
   });
 
-  // Keyboard navigation for combobox
+   // Keyboard navigation for combobox trigger
   combo.addEventListener('keydown', e => {
     if (listbox.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ')) {
-      e.preventDefault();
-      openList();
-      return;
+      e.preventDefault(); openList(); return;
     }
     if (!listbox.hidden) {
-      const items = Array.from(listbox.querySelectorAll<HTMLLIElement>('li'));
-      const active = document.activeElement?.closest('li');
-      let currentIdx = active ? items.indexOf(active) : -1;
-
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          currentIdx = (currentIdx + 1) % items.length;
-          items[currentIdx]?.focus();
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          currentIdx = (currentIdx - 1 + items.length) % items.length;
-          items[currentIdx]?.focus();
-          break;
-        case 'Enter':
-        case ' ': // Select on space as well
-          e.preventDefault();
-          if (active && active.dataset.value) {
-            selectIssuer(active.dataset.value);
-          }
-          closeList();
-          combo.focus(); // Return focus to the combo trigger
-          break;
-        case 'Escape':
-          closeList();
-          combo.focus();
-          break;
-        case 'Tab':
-          closeList(); // Close listbox on tab away
-          break;
-      }
+      handleListboxKeydown(e); // Delegate listbox keys
     }
   });
   // Keyboard navigation for list items themselves
-  listbox.addEventListener('keydown', (e) => {
-     const items = Array.from(listbox.querySelectorAll<HTMLLIElement>('li'));
-     const active = document.activeElement?.closest('li');
-     let currentIdx = active ? items.indexOf(active) : -1;
+  listbox.addEventListener('keydown', handleListboxKeydown); // Delegate listbox keys
 
-     switch (e.key) {
-       case 'ArrowDown':
-          e.preventDefault();
-          currentIdx = (currentIdx + 1) % items.length;
-          items[currentIdx]?.focus();
-          break;
-       case 'ArrowUp':
-          e.preventDefault();
-          currentIdx = (currentIdx - 1 + items.length) % items.length;
-          items[currentIdx]?.focus();
-          break;
-       case 'Enter':
-       case ' ':
-          e.preventDefault();
-          if (active && active.dataset.value) {
-             selectIssuer(active.dataset.value);
-          }
-          closeList();
-          combo.focus();
-          break;
-        case 'Escape':
-           closeList();
-           combo.focus();
-           break;
-        case 'Tab':
-           closeList();
-           break;
-     }
-  });
+  function handleListboxKeydown(e: KeyboardEvent) {
+    const items = Array.from(listbox.querySelectorAll<HTMLLIElement>('li'));
+    const active = document.activeElement?.closest('li');
+    let currentIdx = active ? items.indexOf(active) : -1;
+    let shouldClose = false;
 
-  // Set initial empty state
-  selectIssuer(''); // Ensure combobox starts empty
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        currentIdx = (currentIdx + 1) % items.length;
+        items[currentIdx]?.focus();
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        currentIdx = (currentIdx - 1 + items.length) % items.length;
+        items[currentIdx]?.focus();
+        break;
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (active && active.dataset.value) {
+          selectIssuer(active.dataset.value); // Calls outer function
+          shouldClose = true;
+        }
+        break;
+      case 'Escape':
+        shouldClose = true;
+        break;
+      case 'Tab':
+        shouldClose = true; // Close listbox on tab away
+        break;
+      default: return; // Ignore other keys
+    }
 
-  // Make the hidden native select sync *to* the custom one if needed (rarely necessary)
-  // nativeSelect.addEventListener('change', () => selectIssuer(nativeSelect.value));
+    if (shouldClose) {
+      closeList();
+      combo.focus(); // Return focus to the combo trigger
+    }
+  }
 }
 
 
@@ -226,9 +202,9 @@ function setupCombobox() {
 /* --------------------------------------------------------------------- */
 
 function clearResults() {
-  cardsGrid.innerHTML = ''; // Clear only the cards
-  msg.textContent = '';     // Clear any previous error messages
-  selectedCard?.classList.remove('selected'); // Unselect previous card
+  cardsGrid.innerHTML = '';
+  msg.textContent = '';
+  selectedCard?.classList.remove('selected');
   selectedCard = null;
 }
 
@@ -241,31 +217,26 @@ function buildCard(result: CalcResult, index: number): HTMLDivElement {
     <div class="total">Total ${brl.format(result.finalPrice)}</div>
     <div class="surcharge">Acréscimo ${brl.format(result.surcharge)} (${percent.format(result.extraPaidPercent)}%)</div>`;
 
-  // Add staggering animation delay
-  card.style.transitionDelay = `${index * 50}ms`; // 50ms stagger
+  card.style.transitionDelay = `${index * 50}ms`;
 
-  // Add click listener for selection
   card.addEventListener('click', () => {
-    selectedCard?.classList.remove('selected'); // Remove from previous
+    selectedCard?.classList.remove('selected');
     card.classList.add('selected');
     selectedCard = card;
-    // Optionally, announce selection for accessibility
-    // console.log(`Selecionado: ${result.installments} parcelas`);
   });
 
   return card;
 }
 
 function calculateAndDisplay() {
-  clearResults(); // Clear previous results first
+  clearResults();
 
   const issuerName = nativeSelect.value;
   const basePrice = parseFloat(priceInput.value);
 
-  // --- Validation ---
   if (!issuerName) {
     msg.textContent = 'Selecione a bandeira.';
-    priceInput.focus(); // Focus the relevant field
+    combo.focus(); // Focus combo box trigger instead of hidden input
     return;
   }
   if (isNaN(basePrice) || basePrice <= 0) {
@@ -278,59 +249,44 @@ function calculateAndDisplay() {
   const issuerTable = getIssuerTable(issuerName);
   if (!issuerTable) {
     msg.textContent = 'Tabela de taxas não encontrada para esta bandeira.';
-    // Maybe reset the selection?
-    // selectIssuer('');
     return;
   }
 
-  // --- Calculation ---
   const results = buildComparisonTable(basePrice, issuerTable, getSimples());
 
-  // --- Display ---
-  // 1. Switch state
   contentDiv.classList.remove('state-initial');
   contentDiv.classList.add('state-results-visible');
 
-  // 2. Calculate grid columns (consider viewport width for responsiveness)
   const viewportWidth = window.innerWidth;
-  let columns = 1; // Default for stacked view
-  if (viewportWidth > 960) { // Only calculate columns if not stacked (matches CSS breakpoint)
+  let columns = 1;
+  if (viewportWidth > 960) {
       columns = Math.ceil(results.length / MAX_ROWS_PER_COLUMN);
-      // Clamp columns to a max reasonable number, e.g., 4
       columns = Math.min(columns, 4);
+      cardsGrid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+  } else {
+      cardsGrid.style.gridTemplateColumns = ''; // Let CSS handle it for stacked view
   }
-  // Apply grid style - CSS media query should override this on small screens if needed
-  cardsGrid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
 
 
-  // 3. Populate cards
   results.forEach((result, index) => {
     const card = buildCard(result, index);
     cardsGrid.append(card);
   });
 
-  // 4. Scroll results into view after animation starts
-  // Use setTimeout matching panel transition duration for smooth effect
   setTimeout(() => {
-      // Scroll the grid itself or the right panel into view
       const elementToScroll = viewportWidth <= 960 ? cardsGrid : $('#panel-right');
       elementToScroll?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, PANEL_TRANSITION_DURATION / 2); // Scroll slightly before transition ends
+  }, PANEL_TRANSITION_DURATION / 2);
 }
 
 function resetCalculator() {
-  // Clear inputs
   priceInput.value = '';
-  selectIssuer(''); // Reset combobox (this calls clearList)
+  selectIssuer(''); // Calls the outer function - THIS IS LINE 324 now (approx)
 
-  clearResults(); // Clear cards and messages
+  clearResults();
 
-  // Switch back to initial state
   contentDiv.classList.remove('state-results-visible');
   contentDiv.classList.add('state-initial');
-
-  // Optional: Scroll back to top or to the input panel
-  // $('.panel-left').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* --------------------------------------------------------------------- */
@@ -340,11 +296,10 @@ function resetCalculator() {
 calcBtn.addEventListener('click', calculateAndDisplay);
 resetBtn.addEventListener('click', resetCalculator);
 
-// Allow calculation on Enter key press in the price input
 priceInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
-    e.preventDefault(); // Prevent form submission if it were inside a form
-    calcBtn.click();    // Trigger calculation
+    e.preventDefault();
+    calcBtn.click();
   }
 });
 
@@ -352,4 +307,4 @@ priceInput.addEventListener('keydown', e => {
 /* 4. App Initialization                                                 */
 /* --------------------------------------------------------------------- */
 
-initializeApp(); // Setup combobox and initial state when script loads
+initializeApp();
