@@ -10,6 +10,8 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto+Mono:wght@400&display=swap"
     rel="stylesheet"
   />
+  <!-- Link to stylesheet -->
+  <link rel="stylesheet" href="/style.css"> <!-- Ensure this path is correct -->
 </head>
 
 <body>
@@ -19,13 +21,15 @@
   </button>
 
   <!-- App shell -->
-  <main class="container two-col">
+  <main class="container">
     <header class="app-header">
       <img src="./logo.svg" alt="Logo Empório Zingaro" class="logo" />
       <h1>Calculadora de Parcelamento</h1>
     </header>
 
+    <!-- Main content area wrapper for Grid layout -->
     <div class="content">
+
       <!-- LEFT panel -->
       <section class="panel-left glass">
         <label>Bandeira</label>
@@ -49,44 +53,50 @@
         <!-- hidden native select for form semantics -->
         <select id="issuer" name="issuer" hidden tabindex="-1" aria-hidden="true">
           <option value="">-- escolha --</option>
+          <!-- Options will be populated by JS -->
         </select>
 
         <label for="price">Valor da compra (R$)</label>
-        <input id="price" type="number" step="0.01" min="0" />
+        <input id="price" type="number" step="0.01" min="0" placeholder="Ex: 1500.00" />
 
         <div class="btn-row">
           <button id="calc"  class="btn primary">Calcular</button>
           <button id="reset" class="btn secondary">Resetar</button>
         </div>
 
-        <div id="msg" class="msg"></div>
+        <div id="msg" class="msg" aria-live="assertive"></div> <!-- Added aria-live for error messages -->
       </section>
 
       <!-- RIGHT panel -->
-      <section class="panel-right glass">
-        <div id="placeholder" class="placeholder">
-          <p>Selecione uma bandeira e insira o valor da compra para ver as opções de parcelamento.</p>
-        </div>
+      <section id="panel-right" class="panel-right glass">
+         <!-- NEW: Placeholder shown initially -->
+         <div id="results-placeholder" class="placeholder-content">
+            <img src="./logo.svg" alt="" width="60" style="opacity: 0.4; margin-bottom: 1rem;">
+            <p style="font-size: 0.95rem;">Selecione a bandeira e informe o valor<br>para ver as opções de parcelamento.</p>
+         </div>
 
-        <div id="cards" class="cards-grid"></div>
+         <!-- Results grid - populated by JS -->
+         <div id="cards" class="cards-grid" aria-live="polite"></div> <!-- Added aria-live -->
 
-        <!-- Hidden legacy table (fallback) -->
-        <table id="legacy-table" hidden>
-          <thead>
-            <tr>
-              <th>Parcelas</th><th>Valor Parcela</th><th>Total</th>
-              <th>Acréscimo R$</th><th>Acréscimo %</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+         <!-- Hidden legacy table (kept for reference, but display: none is stronger in CSS) -->
+         <table id="legacy-table" hidden>
+            <thead>
+               <tr>
+                 <th>Parcelas</th><th>Valor Parcela</th><th>Total</th>
+                 <th>Acréscimo R$</th><th>Acréscimo %</th>
+               </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+         </table>
       </section>
-    </div>
+
+    </div> <!-- End of .content -->
   </main>
 
   <!-- Scripts -->
   <script type="module" src="/src/main.ts"></script>
   <script type="module">
+    // Basic navigation for gear button - remains unchanged
     document.getElementById('gear-btn')?.addEventListener(
       'click', () => location.href = './settings.html'
     );
