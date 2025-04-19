@@ -1,27 +1,21 @@
 /* ------------------------------------------------------------------
-   Fonts
+   Fonts & Design Tokens (Keep previous variables)
 ------------------------------------------------------------------ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto+Mono:wght@400&display=swap');
 
-/* ------------------------------------------------------------------
-   Design tokens
------------------------------------------------------------------- */
 :root{
   --radius-xl: 14px; --radius-md: 10px; --radius-sm: 8px;
   --shadow: 0 4px 12px rgba(0,0,0,.08);
   --shadow-active: 0 6px 16px rgba(0,0,0,.12);
-
   --bg-top: #e8f1ff; --bg-bottom: #ffffff;
   --primary: #0d1b2a; --text: #1f2937;
   --surface: rgba(255,255,255,.78);
   --border: rgba(255,255,255,.55);
   --placeholder-text: #6b7280;
-
   --accent: #14b8a6; --accent-hov: #0ea89a;
   --selected: #e0f2f1;
-
-  --transition-duration: 0.45s; /* Slightly longer for smoother feel */
-  --transition-timing: ease-in-out;
+  --transition-duration: 0.45s;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1); /* Smoother ease */
 }
 
 /* ------------------------------------------------------------------
@@ -34,7 +28,7 @@ html,body{
   color:var(--text); min-height:100vh;
   overflow-x: hidden;
 }
-body{display:flex;justify-content:center;padding:2rem 1rem}
+body{display:flex; flex-direction: column; align-items: center; padding:2rem 1rem;} /* Center content vertically */
 
 /* gear button */
 .gear-btn{
@@ -47,36 +41,49 @@ body{display:flex;justify-content:center;padding:2rem 1rem}
 .gear-btn img{width:18px;height:18px}
 
 /* container */
-.container{max-width:1040px;width:100%; margin: 0 auto;} /* Ensure container itself is centered */
+.container{max-width:1100px; width:100%; margin: 0 auto; flex-grow: 1; display: flex; flex-direction: column;}
 
-/* REVISED: Main content layout using Flexbox */
+/* header */
+.app-header{text-align:center;margin-bottom:1.75rem; width: 100%;}
+.logo{width:96px;margin:0 auto 1rem}
+h1{font-size:1.7rem;font-weight:600;color:var(--primary)}
+
+/* REVISED: Main content layout */
 .content {
   display: flex;
-  justify-content: center; /* Center the flex items (panels) */
-  align-items: flex-start; /* Align panels to the top */
+  justify-content: center; /* Center flex items initially */
+  align-items: flex-start;
   gap: 2rem;
   width: 100%;
-  padding: 0 1rem; /* Add some padding to prevent touching edges */
+  padding: 0 1rem;
+  position: relative; /* Needed for absolute positioning of children */
+  flex-grow: 1; /* Allow content to take available space */
+  min-height: 400px; /* Give it some minimum height for positioning */
 }
 
-/* State-based adjustments (applied to .content) */
-/* Define base panel styles first */
+/* Base Panel Styles */
 .panel-left, .panel-right {
   padding: 2.25rem 2rem 2rem;
   border-radius: var(--radius-xl);
   background: var(--surface);
   border: 1px solid var(--border);
-  flex-shrink: 0; /* Prevent panels from shrinking */
-  width: clamp(320px, 35%, 400px); /* Control left panel width */
+  flex-shrink: 0;
+  width: clamp(320px, 35%, 400px);
+  position: relative; /* Default: relative */
+  top: 0; /* Default top */
+  left: auto; /* Default left */
   transition: transform var(--transition-duration) var(--transition-timing),
               opacity var(--transition-duration) var(--transition-timing),
               box-shadow var(--transition-duration) var(--transition-timing),
-              backdrop-filter var(--transition-duration) var(--transition-timing);
+              backdrop-filter var(--transition-duration) var(--transition-timing),
+              position 0s linear var(--transition-duration); /* Delay position change */
 }
 .panel-right {
-   width: clamp(400px, 55%, 640px); /* Control right panel width */
+   width: clamp(400px, 55%, 640px);
 }
 
+
+/* --- State Styling --- */
 
 /* Initial State */
 .state-initial .panel-left {
@@ -84,177 +91,121 @@ body{display:flex;justify-content:center;padding:2rem 1rem}
   opacity: 1;
   box-shadow: var(--shadow-active);
   backdrop-filter: blur(22px) saturate(180%);
+  position: relative; /* Ensure relative */
   z-index: 10;
 }
 .state-initial .panel-right {
-  transform: translateX(0); /* Explicitly start at 0 */
+  transform: translateX(0);
   opacity: 0.6;
   box-shadow: none;
   backdrop-filter: blur(5px) saturate(100%);
+  position: relative; /* Ensure relative */
+  left: auto;
   z-index: 5;
 }
 .state-initial .placeholder-content {
-  opacity: 1;
-  height: auto;
-  visibility: visible;
+  opacity: 1; height: auto; visibility: visible;
   transition: opacity 0.3s var(--transition-timing) 0.1s, height 0s linear 0.4s, visibility 0s linear 0.4s;
 }
 .state-initial #cards {
-  opacity: 0;
-  pointer-events: none;
+  opacity: 0; pointer-events: none;
 }
 
 /* Results Visible State */
 .state-results-visible .panel-left {
-  /* Move significantly left, fade slightly */
-  transform: translateX(-65%); /* Tune this value */
-  opacity: 0.6;
+  /* Move way off screen, fade out */
+  transform: translateX(-100%); /* Move its full width + more */
+  opacity: 0.3;
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px) saturate(120%);
-  z-index: 10;
+  position: relative; /* Keep relative to influence initial spacing maybe? Or absolute? Test */
+  z-index: 10; /* Keep above if needed */
+  pointer-events: none; /* Prevent interaction when off-screen */
 }
 .state-results-visible .panel-right {
-  /* Move left less drastically to appear centered */
-  transform: translateX(-20%); /* Tune this value */
+  /* Center using absolute positioning */
+  position: absolute;
+  left: 50%;
+  top: 0; /* Align to top of .content */
+  transform: translateX(-50%); /* The centering trick */
   opacity: 1;
   box-shadow: var(--shadow-active);
   backdrop-filter: blur(22px) saturate(180%);
-  z-index: 5;
+  z-index: 15; /* Ensure it's above faded left panel */
+  /* Width is inherited */
+  transition: transform var(--transition-duration) var(--transition-timing), /* Animate transform if needed, though it might jump with position change */
+              opacity var(--transition-duration) var(--transition-timing),
+              box-shadow var(--transition-duration) var(--transition-timing),
+              backdrop-filter var(--transition-duration) var(--transition-timing),
+              position 0s linear 0s; /* Change position immediately */
 }
 .state-results-visible .placeholder-content {
-  opacity: 0;
-  height: 0;
-  overflow: hidden;
-  pointer-events: none;
-  visibility: hidden;
+  opacity: 0; height: 0; overflow: hidden; pointer-events: none; visibility: hidden;
   transition: opacity 0.2s var(--transition-timing), height 0s linear 0.2s, visibility 0s linear 0.2s;
 }
 .state-results-visible #cards {
-  opacity: 1;
-  pointer-events: auto;
+  opacity: 1; pointer-events: auto;
 }
 
-/* header */
-.app-header{text-align:center;margin-bottom:1.75rem}
-.logo{width:96px;margin:0 auto 1rem}
-h1{font-size:1.7rem;font-weight:600;color:var(--primary)}
 
-/* form elements - no changes needed */
+/* Form Elements, Combobox, Cards Grid, Card Styling - (Keep previous versions, no changes needed here) */
+/* ... (paste the unchanged CSS for these sections here) ... */
 label{font-weight:600;display:block;margin:.85rem 0 .45rem}
-input{
-  width:100%;padding:.58rem .9rem;font-size:1rem;border-radius:var(--radius-md);
-  border:1px solid rgba(0,0,0,.06);background:#fdfdfd;
-  box-shadow:inset 0 2px 4px rgba(0,0,0,.04);transition:border .15s,box-shadow .15s;
-}
-input:focus{
-  outline:none;border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(20,184,166,.25),inset 0 2px 4px rgba(0,0,0,.04)
-}
+input{width:100%;padding:.58rem .9rem;font-size:1rem;border-radius:var(--radius-md);border:1px solid rgba(0,0,0,.06);background:#fdfdfd;box-shadow:inset 0 2px 4px rgba(0,0,0,.04);transition:border .15s,box-shadow .15s;}
+input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(20,184,166,.25),inset 0 2px 4px rgba(0,0,0,.04)}
 .btn-row{display:flex;gap:.75rem;margin-top:1.25rem}
-.btn{cursor:pointer;font-size:1rem;font-weight:600;padding:.55rem 1.2rem;border-radius:var(--radius-md);
-     border:1px solid transparent;transition:filter .15s,background .15s}
+.btn{cursor:pointer;font-size:1rem;font-weight:600;padding:.55rem 1.2rem;border-radius:var(--radius-md);border:1px solid transparent;transition:filter .15s,background .15s}
 .btn.primary{background:var(--accent);color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.12)}
 .btn.primary:hover{background:var(--accent-hov)}
 .btn.secondary{background:#fff;color:var(--text);border-color:rgba(0,0,0,.12)}
 .btn.secondary:hover{filter:brightness(.97)}
 .msg{margin-top:.85rem;font-weight:600;color:#b91c1c; min-height: 1.5em;}
-
-/* Custom combobox - no changes needed */
-.combo{
-  display:flex;align-items:center;gap:.5rem;cursor:pointer;
-  padding:.55rem .9rem;border:1px solid rgba(0,0,0,.06);
-  border-radius:var(--radius-md);background:#fdfdfd;min-height:44px;
-  box-shadow:inset 0 2px 4px rgba(0,0,0,.04);
-}
-.combo:focus{outline:none;border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(20,184,166,.25),inset 0 2px 4px rgba(0,0,0,.04)}
+.combo{display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.55rem .9rem;border:1px solid rgba(0,0,0,.06);border-radius:var(--radius-md);background:#fdfdfd;min-height:44px;box-shadow:inset 0 2px 4px rgba(0,0,0,.04);}
+.combo:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(20,184,166,.25),inset 0 2px 4px rgba(0,0,0,.04)}
 .combo[aria-expanded="true"] .combo-caret{transform:rotate(180deg)}
 .combo-icon{width:24px;height:24px;flex:0 0 24px}
 .combo-caret{margin-left:auto;transition:transform .2s}
-.combo-list{
-  position:absolute;z-index:30;margin-top:.25rem;list-style:none;padding:.3rem;
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
-  backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--shadow);max-height:260px;overflow:auto;
-}
-.combo-list li{display:flex;align-items:center;gap:.55rem;padding:.45rem .8rem;border-radius:6px;
-              cursor:pointer;font-size:.96rem}
+.combo-list{position:absolute;z-index:30;margin-top:.25rem;list-style:none;padding:.3rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--shadow);max-height:260px;overflow:auto;}
+.combo-list li{display:flex;align-items:center;gap:.55rem;padding:.45rem .8rem;border-radius:6px;cursor:pointer;font-size:.96rem}
 .combo-list li:hover,.combo-list li[aria-selected="true"]{background:rgba(0,0,0,.06)}
 .combo-list img{width:22px;height:22px}
-
-
-/* Placeholder & Cards grid - styling ok, relies on state classes */
-.placeholder-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 3rem 1rem;
-  color: var(--placeholder-text);
-  min-height: 200px;
-}
-
-.cards-grid{
-  display:grid;
-  grid-auto-flow:row;
-  gap:1rem;
-  /* grid-template-columns will be set by JS */
-  transition: opacity 0.3s var(--transition-timing) 0.1s;
-}
-.card{
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 2px 4px rgba(0,0,0,.05);
-  padding: 1.2rem 1rem 1rem;display:flex;flex-direction:column;align-items:center;
-  text-align:center;cursor:pointer;
-  opacity: 0;
-  transform: scale(0.95) translateY(10px);
-  transition: opacity 0.3s ease-out,
-              transform 0.3s ease-out,
-              background-color 0.15s ease-in-out,
-              box-shadow 0.2s ease-in-out;
-}
-.state-results-visible .card {
-  opacity: 1;
-  transform: scale(1) translateY(0);
-}
-.card:hover{
-  transform: translateY(-3px) scale(1.01); /* Combined hover effect */
-  box-shadow: 0 5px 10px rgba(0,0,0,.08);
-}
-.card.selected{
-  background: var(--selected);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent);
-}
+.placeholder-content {display: flex;flex-direction: column;align-items: center;justify-content: center;text-align: center;padding: 3rem 1rem;color: var(--placeholder-text);min-height: 200px;}
+.cards-grid{display:grid;grid-auto-flow:row;gap:1rem;transition: opacity 0.3s var(--transition-timing) 0.1s;}
+.card{background: #ffffff;border: 1px solid #e5e7eb;border-radius: var(--radius-sm);box-shadow: 0 2px 4px rgba(0,0,0,.05);padding: 1.2rem 1rem 1rem;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;opacity: 0;transform: scale(0.95) translateY(10px);transition: opacity 0.3s ease-out, transform 0.3s ease-out, background-color 0.15s ease-in-out, box-shadow 0.2s ease-in-out;}
+.state-results-visible .card {opacity: 1;transform: scale(1) translateY(0);}
+.card:hover{transform: translateY(-3px) scale(1.01);box-shadow: 0 5px 10px rgba(0,0,0,.08);}
+.card.selected{background: var(--selected);border-color: var(--accent);box-shadow: 0 0 0 2px var(--accent);}
 .card .installments{font-size:1.35rem;font-weight:600;margin-bottom:.35rem;color:var(--primary)}
 .card .per{font-family:'Roboto Mono',monospace;font-size:1.25rem;margin-bottom:.55rem}
 .card .total,.card .surcharge{font-size:.9rem;line-height:1.3;color:#334155}
+
 
 /* ------------------------------------------------------------------
    Responsiveness
 ------------------------------------------------------------------ */
 @media(max-width: 960px) {
   .content {
-    /* Stack panels */
+    /* Stack panels vertically */
     flex-direction: column;
-    align-items: center; /* Center stacked panels */
+    align-items: center; /* Center items vertically */
     gap: 1.5rem;
-    padding: 0 0.5rem; /* Reduce padding */
+    padding: 0 0.5rem;
+    position: static; /* Important: Remove relative positioning */
   }
   .panel-left, .panel-right {
-    /* Reset transforms when stacked, allow flexbox to handle layout */
-    transform: translateX(0) !important; /* Override inline transforms */
-    width: min(100%, 600px); /* Allow full width up to a max */
+    /* Override state styles for stacked layout */
+    position: static !important; /* Revert positioning */
+    transform: none !important; /* Revert transforms */
+    opacity: 1 !important; /* Ensure full opacity */
+    width: min(100%, 600px);
+    box-shadow: var(--shadow-active) !important; /* Consistent shadow */
+    backdrop-filter: blur(22px) saturate(180%) !important; /* Consistent blur */
+    z-index: auto !important;
   }
-   /* Adjust opacities for stacked view */
   .state-results-visible .panel-left {
-    opacity: 0.85; /* Still slightly deemphasize */
+     /* Optionally hide or further de-emphasize left panel when stacked */
+     /* opacity: 0.7 !important; */
   }
-   .state-results-visible .panel-right {
-     opacity: 1; /* Ensure right is fully visible */
-   }
   .cards-grid {
      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   }
@@ -262,7 +213,7 @@ input:focus{
 
 @media(max-width: 480px) {
   body { padding: 1rem 0.5rem; }
-  .panel-left, .panel-right { padding: 1.5rem 1rem 1.5rem; width: min(100%, 400px); } /* Narrower max */
+  .panel-left, .panel-right { padding: 1.5rem 1rem 1.5rem; width: min(100%, 400px); }
   h1 { font-size: 1.5rem; }
   .card { padding: 1rem 0.8rem; }
   .card .installments { font-size: 1.2rem; }
