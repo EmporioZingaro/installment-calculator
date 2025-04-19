@@ -69,7 +69,7 @@ function clearResults() {
 }
 
 /** Builds a single result card element */
-function buildCard(r: ReturnType<typeof buildComparisonTable>[number]) {
+function buildCard(r: CalcResult) {
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
@@ -136,7 +136,10 @@ calcBtn.addEventListener('click', () => {
 
 /* Keyboard support – press Enter inside price field triggers Calcular */
 priceInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') calcBtn.click();
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    calcBtn.click();
+  }
 });
 
 /* Reset button */
@@ -146,23 +149,6 @@ resetBtn.addEventListener('click', () => {
   issuerPreview.src = '';
   issuerPreview.style.opacity = '0';
   clearResults();
-
-  contentDiv.classList.remove('state-results-visible');
-  contentDiv.classList.add('state-initial');
-}
-
-/* --------------------------------------------------------------------- */
-/* 3. Event Listeners                                                    */
-/* --------------------------------------------------------------------- */
-
-calcBtn.addEventListener('click', calculateAndDisplay);
-resetBtn.addEventListener('click', resetCalculator);
-
-priceInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    calcBtn.click();
-  }
 });
 
 /* ────────────────────────────────────────────────────────────────────────── */
