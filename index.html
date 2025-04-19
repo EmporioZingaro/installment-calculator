@@ -26,9 +26,8 @@
       <h1>Calculadora de Parcelamento</h1>
     </header>
 
-    <!-- NEW flex workspace ------------------------------------------------- -->
     <div id="workspace" class="workspace">
-      <!-- LEFT panel (form) -->
+      <!-- LEFT panel ------------------------------------------------------ -->
       <section id="panel-left" class="panel-left glass">
         <label>Bandeira</label>
 
@@ -49,7 +48,7 @@
         </div>
         <ul id="issuer-list" class="combo-list" role="listbox" hidden></ul>
 
-        <!-- hidden native select for form semantics -->
+        <!-- hidden native select -->
         <select id="issuer" name="issuer" hidden tabindex="-1" aria-hidden="true">
           <option value="">-- escolha --</option>
         </select>
@@ -59,20 +58,20 @@
 
         <div class="btn-row">
           <button id="calc"  class="btn primary">Calcular</button>
-          <button id="reset" class="btn secondary">Resetar</button>
+          <button id="reset" class="btn secondary">Limpar</button>
         </div>
 
         <div id="msg" class="msg"></div>
       </section>
 
-      <!-- RIGHT panel (results) -->
+      <!-- RIGHT panel ----------------------------------------------------- -->
       <section id="panel-right" class="panel-right glass">
-        <!-- Placeholder shown before first calculation -->
+        <!-- Helper placeholder -->
         <div id="placeholder" class="placeholder">
           <ol>
-            <li>1. Escolha a bandeira</li>
-            <li>2. Digite o valor da compra</li>
-            <li>3. Clique <strong>Calcular</strong></li>
+            <li>Escolha a bandeira</li>
+            <li>Digite o valor da compra</li>
+            <li>Clique <strong>Calcular</strong></li>
           </ol>
         </div>
 
