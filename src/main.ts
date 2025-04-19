@@ -1,27 +1,35 @@
 /* ---------------------------------------------------------------------------
-   src/main.ts – v3: custom combobox, fixed grid, issuer icons, card grid
+   src/main.ts – v4: centre‑focused panel, shrinkable form, animated results
 --------------------------------------------------------------------------- */
 import '../style.css';
-import { buildComparisonTable } from './fees';
+import { buildComparisonTable, type CalcResult } from './fees';
 import { issuerTables, getIssuerTable } from './issuers';
 import GearIcon from '@/assets/icons/gear.svg';
 
 /* Load issuer SVGs */
 const issuerIcons = import.meta.glob<string>(
-  '@/assets/icons/issuers/*.svg', { eager:true, import:'default' }
-) as Record<string,string>;
+  '@/assets/icons/issuers/*.svg',
+  { eager: true, import: 'default' }
+) as Record<string, string>;
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
-const brl = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
-const $ = (id:string)=>document.getElementById(id)!;
+const brl = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL'
+});
+const $ = (id: string) => document.getElementById(id)!;
 
-/* DOM refs */
-const nativeSelect  = $('issuer')            as HTMLSelectElement; // hidden
-const combo         = $('issuer-combo')      as HTMLDivElement;
-const comboLabel    = combo.querySelector('.combo-label') as HTMLSpanElement;
-const comboIcon     = combo.querySelector('.combo-icon')  as HTMLImageElement;
-const listbox       = $('issuer-list')       as HTMLUListElement;
+/* ── DOM refs ──────────────────────────────────────────────────────────── */
+const panelLeft   = $('panel-left')  as HTMLElement;
+const panelRight  = $('panel-right') as HTMLElement;
+const placeholder = $('placeholder') as HTMLDivElement;
+
+const nativeSelect = $('issuer')          as HTMLSelectElement;   // hidden
+const combo        = $('issuer-combo')    as HTMLDivElement;
+const comboLabel   = combo.querySelector('.combo-label') as HTMLSpanElement;
+const comboIcon    = combo.querySelector('.combo-icon')  as HTMLImageElement;
+const listbox      = $('issuer-list')     as HTMLUListElement;
 
 const priceInput = $('price')   as HTMLInputElement;
 const calcBtn    = $('calc')    as HTMLButtonElement;
@@ -30,137 +38,235 @@ const msg        = $('msg')     as HTMLDivElement;
 const cardsGrid  = $('cards')   as HTMLDivElement;
 const tbody      = $('tbody')   as HTMLTableSectionElement;
 
+/* ── state ─────────────────────────────────────────────────────────────── */
+let selectedCard: HTMLDivElement | null = null;
+let summaryBanner: HTMLDivElement | null = null;
+
 /* helpers */
-const getSimples = () => (parseFloat(localStorage.getItem('simplesRate') ?? '5'))/100;
+const getSimples = () =>
+  parseFloat(localStorage.getItem('simplesRate') ?? '5') / 100;
 
 /* --------------------------------------------------------------------- */
 /* 1. Build combobox list                                                */
 /* --------------------------------------------------------------------- */
-issuerTables.forEach(({issuer})=>{
+issuerTables.forEach(({ issuer }) => {
   /* hidden <option> for semantics */
-  const opt=document.createElement('option');
-  opt.value=issuer;opt.textContent=issuer;
+  const opt = document.createElement('option');
+  opt.value = issuer;
+  opt.textContent = issuer;
   nativeSelect.append(opt);
 
   /* visible <li> */
-  const li=document.createElement('li');
-  li.setAttribute('role','option');
-  li.dataset.value=issuer;
+  const li = document.createElement('li');
+  li.setAttribute('role', 'option');
+  li.dataset.value = issuer;
 
-  const iconPath = issuerIcons[`/src/assets/icons/issuers/${issuer.toLowerCase()}.svg`];
-  li.innerHTML=`<img src="${iconPath ?? ''}" alt="" /><span>${issuer}</span>`;
+  const iconPath =
+    issuerIcons[`/src/assets/icons/issuers/${issuer.toLowerCase()}.svg`];
+  li.innerHTML = `<img src="${iconPath ?? ''}" alt="" /><span>${issuer}</span>`;
   listbox.append(li);
 });
 
 /* open / close */
-function openList(){
-  listbox.hidden=false; combo.setAttribute('aria-expanded','true');
+function openList() {
+  listbox.hidden = false;
+  combo.setAttribute('aria-expanded', 'true');
 }
-function closeList(){
-  listbox.hidden=true;  combo.setAttribute('aria-expanded','false');
+function closeList() {
+  listbox.hidden = true;
+  combo.setAttribute('aria-expanded', 'false');
 }
 
 /* sync selection */
-function selectIssuer(value:string){
-  nativeSelect.value=value;
-  comboLabel.textContent=value;
-  const path = issuerIcons[`/src/assets/icons/issuers/${value.toLowerCase()}.svg`];
+function selectIssuer(value: string) {
+  nativeSelect.value = value;
+  comboLabel.textContent = value;
+  const path =
+    issuerIcons[`/src/assets/icons/issuers/${value.toLowerCase()}.svg`];
   comboIcon.src = path ?? '';
-  comboIcon.style.opacity = path ? '1':'0';
+  comboIcon.style.opacity = path ? '1' : '0';
 
   /* highlight in list */
-  listbox.querySelectorAll('li').forEach(li=>{
-    li.setAttribute('aria-selected', li.dataset.value===value ? 'true':'false');
+  listbox.querySelectorAll('li').forEach((li) => {
+    li.setAttribute('aria-selected', li.dataset.value === value ? 'true' : 'false');
   });
   closeList();
+  markNeedsRecalc();
 }
 
 /* events */
 combo.addEventListener('click', () => {
-  if (listbox.hidden) openList(); else closeList();
+  if (listbox.hidden) openList();
+  else closeList();
 });
-listbox.addEventListener('click', (e)=>{
-  const li=(e.target as HTMLElement).closest('li') as HTMLLIElement;
-  if(li) selectIssuer(li.dataset.value!);
+listbox.addEventListener('click', (e) => {
+  const li = (e.target as HTMLElement).closest('li') as HTMLLIElement | null;
+  if (li) selectIssuer(li.dataset.value!);
 });
-document.addEventListener('click',e=>{
-  if(!combo.contains(e.target as Node) && !listbox.contains(e.target as Node)) closeList();
+document.addEventListener('click', (e) => {
+  if (!combo.contains(e.target as Node) && !listbox.contains(e.target as Node))
+    closeList();
 });
-combo.addEventListener('keydown', e=>{
-  const visibleItems = Array.from(listbox.querySelectorAll<HTMLLIElement>('li'));
-  const current = visibleItems.findIndex(li=>li.getAttribute('aria-selected')==='true');
-  switch(e.key){
+combo.addEventListener('keydown', (e) => {
+  const items = Array.from(listbox.querySelectorAll<HTMLLIElement>('li'));
+  const current = items.findIndex(
+    (li) => li.getAttribute('aria-selected') === 'true'
+  );
+  switch (e.key) {
     case 'ArrowDown':
       e.preventDefault();
       openList();
-      const next = visibleItems[(current+1)%visibleItems.length];
-      next.focus(); break;
+      items[(current + 1) % items.length].focus();
+      break;
     case 'ArrowUp':
       e.preventDefault();
       openList();
-      const prev = visibleItems[(current-1+visibleItems.length)%visibleItems.length];
-      prev.focus(); break;
-    case 'Enter': if(!listbox.hidden) e.preventDefault(); break;
-    case 'Escape': closeList(); break;
+      items[(current - 1 + items.length) % items.length].focus();
+      break;
+    case 'Enter':
+      if (!listbox.hidden) e.preventDefault();
+      break;
+    case 'Escape':
+      closeList();
+      break;
   }
 });
 /* initial state */
 selectIssuer('');
 
 /* --------------------------------------------------------------------- */
-/* 2. Card rendering                                                     */
+/* 2. Landing / expanded helpers                                         */
 /* --------------------------------------------------------------------- */
-function clearResults(){
-  cardsGrid.innerHTML=''; tbody.innerHTML=''; msg.textContent='';
-  cardsGrid.style.gridTemplateColumns='';                      // reset grid
+function enterExpanded() {
+  panelLeft.classList.add('shrunk');
+  panelRight.classList.add('expanded');
+  placeholder.classList.add('hidden');
 }
 
-function buildCard(r:ReturnType<typeof buildComparisonTable>[number]){
-  const card=document.createElement('div'); card.className='card';
-  card.innerHTML=`
+function returnToLanding() {
+  panelLeft.classList.remove('shrunk');
+  panelRight.classList.remove('expanded');
+  placeholder.classList.remove('hidden');
+  removeSummary();
+  selectedCard = null;
+  calcBtn.textContent = 'Calcular';
+}
+
+function removeSummary() {
+  summaryBanner?.remove();
+  summaryBanner = null;
+}
+
+function showSummary(r: CalcResult) {
+  if (!summaryBanner) {
+    summaryBanner = document.createElement('div');
+    summaryBanner.className = 'summary';
+    panelRight.append(summaryBanner);
+  }
+  summaryBanner.textContent = `→ ${r.installments}× de ${brl.format(
+    r.perInstallment
+  )}  |  Total ${brl.format(r.finalPrice)}`;
+}
+
+function markNeedsRecalc() {
+  if (cardsGrid.children.length) {
+    calcBtn.textContent = 'Recalcular';
+    removeSummary();
+  }
+}
+
+/* --------------------------------------------------------------------- */
+/* 3. Card rendering                                                     */
+/* --------------------------------------------------------------------- */
+function clearResults() {
+  cardsGrid.innerHTML = '';
+  tbody.innerHTML = '';
+  msg.textContent = '';
+  cardsGrid.style.gridTemplateColumns = '';
+  removeSummary();
+}
+
+function buildCard(
+  r: ReturnType<typeof buildComparisonTable>[number],
+  index: number
+) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.setProperty('--i', index.toString());
+  card.innerHTML = `
     <div class="installments">${r.installments}×</div>
     <div class="per">${brl.format(r.perInstallment)}</div>
     <div class="total">Total ${brl.format(r.finalPrice)}</div>
-    <div class="surcharge">Acréscimo ${brl.format(r.surcharge)} (${r.extraPaidPercent.toFixed(2)} %)</div>`;
+    <div class="surcharge">Acréscimo ${brl.format(r.surcharge)} (${r.extraPaidPercent.toFixed(
+      2
+    )} %)</div>`;
   return card;
 }
 
-let selectedCard:HTMLDivElement|null=null;
-
-calcBtn.addEventListener('click',()=>{
+/* --------------------------------------------------------------------- */
+/* 4. Calculate button handler                                           */
+/* --------------------------------------------------------------------- */
+calcBtn.addEventListener('click', () => {
   clearResults();
-  const issuer=nativeSelect.value;
-  const base=parseFloat(priceInput.value);
-  if(!issuer){msg.textContent='Selecione a bandeira.';return;}
-  if(isNaN(base)||base<=0){msg.textContent='Valor inválido.';return;}
 
-  const table=getIssuerTable(issuer);
-  if(!table){msg.textContent='Tabela não encontrada.';return;}
+  const issuer = nativeSelect.value;
+  const base = parseFloat(priceInput.value);
+  if (!issuer) {
+    msg.textContent = 'Selecione a bandeira.';
+    return;
+  }
+  if (isNaN(base) || base <= 0) {
+    msg.textContent = 'Valor inválido.';
+    return;
+  }
 
-  const rows=buildComparisonTable(base,table,getSimples());
-  const maxRows=3; const cols=Math.ceil(rows.length/maxRows);
-  cardsGrid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  const table = getIssuerTable(issuer);
+  if (!table) {
+    msg.textContent = 'Tabela não encontrada.';
+    return;
+  }
 
-  rows.forEach(r=>{
-    const card=buildCard(r);
-    card.addEventListener('click',()=>{
+  /* visual transition */
+  enterExpanded();
+
+  const rows = buildComparisonTable(base, table, getSimples());
+  const maxRows = 3;
+  const cols = Math.ceil(rows.length / maxRows);
+  cardsGrid.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+
+  rows.forEach((r, idx) => {
+    const card = buildCard(r, idx);
+    card.addEventListener('click', () => {
       selectedCard?.classList.remove('selected');
-      card.classList.add('selected'); selectedCard=card;
+      card.classList.add('selected');
+      selectedCard = card;
+      showSummary(r);
     });
     cardsGrid.append(card);
   });
-  cardsGrid.scrollIntoView({behavior:'smooth'});
+
+  calcBtn.textContent = 'Recalcular';
 });
 
 /* enter‑to‑calc */
-priceInput.addEventListener('keydown',e=>{ if(e.key==='Enter') calcBtn.click(); });
+priceInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') calcBtn.click();
+});
+
+/* edits require recalculation */
+priceInput.addEventListener('input', markNeedsRecalc);
 
 /* reset */
-resetBtn.addEventListener('click',()=>{
-  priceInput.value=''; nativeSelect.value=''; selectIssuer('');
+resetBtn.addEventListener('click', () => {
+  priceInput.value = '';
+  nativeSelect.value = '';
+  selectIssuer('');
   clearResults();
+  returnToLanding();
 });
 
 /* gear icon */
-const gearImg=document.getElementById('gear-icon') as HTMLImageElement;
-gearImg.src=GearIcon; gearImg.width=18; gearImg.height=18;
+const gearImg = $('gear-icon') as HTMLImageElement;
+gearImg.src = GearIcon;
+gearImg.width = 18;
+gearImg.height = 18;
