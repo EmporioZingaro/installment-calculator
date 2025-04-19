@@ -1,349 +1,583 @@
-/*  ------------------------------------------------------------------
-    Global typefaces (Inter + Roboto Mono loaded via @import)
-    ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------
+   Fonts
+------------------------------------------------------------------ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto+Mono:wght@400&display=swap');
 
-/*  ------------------------------------------------------------------
-    Design‑tokens
-    ------------------------------------------------------------------ */
-:root {
-  /* Layout radii & shadows */
-  --radius-xl: 14px;
-  --radius-md: 10px;
-  --radius-sm: 8px;
-  --shadow: 0 4px 12px rgba(0, 0, 0, .08);
+/* ------------------------------------------------------------------
+   Design tokens
+------------------------------------------------------------------ */
+:root{
+  --radius-xl:14px; --radius-md:10px; --radius-sm:8px;
+  --shadow:0 4px 12px rgba(0,0,0,.08);
 
-  /* Soft gradient background */
-  --bg‑top:    #f2f6ff;
-  --bg‑bottom: #ffffff;
+  --bg-top:#e8f1ff; --bg-bottom:#ffffff;
+  --primary:#0d1b2a; --text:#1f2937;
+  --surface:rgba(255,255,255,.78); /* glass */
+  --border:rgba(255,255,255,.55);
 
-  /* Duotone palette */
-  --primary:   #0d1b2a;               /* midnight blue – headings, icons */
-  --text:      #1f2937;               /* body copy */
-  --surface:   rgba(255, 255, 255, .72); /* glass base, slightly more opaque */
-  --border:    rgba(255, 255, 255, .55); /* glass border */
-
-  --accent:    #14b8a6;               /* vibrant teal – buttons, hovers */
-  --accent‑hover: #0ea89a;
-
-  --selected:  #e6fae6;               /* selected card background */
+  --accent:#14b8a6; --accent-hov:#0ea89a;
+  --selected:#e6fae6;
 }
 
-/*  ------------------------------------------------------------------
-    Reset / base
-    ------------------------------------------------------------------ */
-*,*::before,*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ------------------------------------------------------------------
+   Base / layout
+------------------------------------------------------------------ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  font-family:'Inter',system-ui,sans-serif; line-height:1.5;
+  background:linear-gradient(180deg,var(--bg-top) 0%,var(--bg-bottom) 70%);
+  color:var(--text); min-height:100vh;
+}
+body{display:flex;justify-content:center;padding:2rem 1rem}
+
+/* gear button */
+.gear-btn{
+  position:fixed;top:1.25rem;right:1.25rem;width:36px;height:36px;
+  background:var(--surface);border:1px solid var(--border);border-radius:50%;
+  backdrop-filter:blur(18px) saturate(180%);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:var(--shadow);transition:filter .15s;
+}
+.gear-btn:hover{filter:brightness(.95)}
+.gear-btn img{width:18px;height:18px}
+
+/* container grid */
+.container{max-width:1040px;width:100%}
+.container .content{display:grid;grid-template-columns:fit-content(400px) 1fr;gap:2rem}
+@media(max-width:820px){.container .content{grid-template-columns:1fr}}
+
+/* panels */
+.panel-left,.panel-right{
+  padding:2.25rem 2rem 2rem;border-radius:var(--radius-xl);
+  background:var(--surface);border:1px solid var(--border);
+  backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--shadow);
+}
+.panel-left{max-width:400px}
+
+/* header */
+.app-header{text-align:center;margin-bottom:1.75rem}
+.logo{width:96px;margin:0 auto 1rem}
+h1{font-size:1.7rem;font-weight:600;color:var(--primary)}
+
+/* form */
+label{font-weight:600;display:block;margin:.85rem 0 .45rem}
+input{
+  width:100%;padding:.58rem .9rem;font-size:1rem;border-radius:var(--radius-md);
+  border:1px solid rgba(0,0,0,.06);background:#fdfdfd;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.04);transition:border .15s,box-shadow .15s;
+}
+input:focus{
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(20,184,166,.25),inset 0 2px 4px rgba(0,0,0,.04)
 }
 
-html, body {
-  font-family: 'Inter', system-ui, sans-serif;
-  line-height: 1.5;
-  background: linear-gradient(180deg, var(--bg‑top) 0%, var(--bg‑bottom) 70%);
-  color: var(--text);
-  min-height: 100vh;
+/* buttons */
+.btn-row{display:flex;gap:.75rem;margin-top:1.25rem}
+.btn{cursor:pointer;font-size:1rem;font-weight:600;padding:.55rem 1.2rem;border-radius:var(--radius-md);
+     border:1px solid transparent;transition:filter .15s,background .15s}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.12)}
+.btn.primary:hover{background:var(--accent-hov)}
+.btn.secondary{background:#fff;color:var(--text);border-color:rgba(0,0,0,.12)}
+.btn.secondary:hover{filter:brightness(.97)}
+
+/* message */
+.msg{margin-top:.85rem;font-weight:600;color:#b91c1c}
+
+/* ------------------------------------------------------------------
+   Custom combobox
+------------------------------------------------------------------ */
+.combo{
+  display:flex;align-items:center;gap:.5rem;cursor:pointer;
+  padding:.55rem .9rem;border:1px solid rgba(0,0,0,.06);
+  border-radius:var(--radius-md);background:#fdfdfd;min-height:44px;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.04);
+}
+.combo:focus{outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(20,184,166,.25),inset 0 2px 4px rgba(0,0,0,.04)}
+.combo[aria-expanded="true"] .combo-caret{transform:rotate(180deg)}
+.combo-icon{width:24px;height:24px;flex:0 0 24px}
+.combo-caret{margin-left:auto;transition:transform .2s}
+.combo-list{
+  position:absolute;z-index:30;margin-top:.25rem;list-style:none;padding:.3rem;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--shadow);max-height:260px;overflow:auto;
+}
+.combo-list li{display:flex;align-items:center;gap:.55rem;padding:.45rem .8rem;border-radius:6px;
+              cursor:pointer;font-size:.96rem}
+.combo-list li:hover,.combo-list li[aria-selected="true"]{background:rgba(0,0,0,.06)}
+.combo-list img{width:22px;height:22px}
+
+/* ------------------------------------------------------------------
+   Cards grid
+------------------------------------------------------------------ */
+.cards-grid{display:grid;grid-auto-flow:row;gap:1.25rem}
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  box-shadow:var(--shadow);padding:1.2rem 1rem 1rem;display:flex;flex-direction:column;align-items:center;
+  text-align:center;cursor:pointer;transition:transform .12s,box-shadow .12s
+}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.10)}
+.card.selected{background:var(--selected)}
+.card .installments{font-size:1.35rem;font-weight:600;margin-bottom:.35rem;color:var(--primary)}
+.card .per{font-family:'Roboto Mono',monospace;font-size:1.25rem;margin-bottom:.55rem}
+.card .total,.card .surcharge{font-size:.9rem;line-height:1.3;color:#334155}
+
+/* ------------------------------------------------------------------
+   Mobile fallback
+------------------------------------------------------------------ */
+@media(max-width:820px){
+  .combo-list{max-height:220px}
+  .cards-grid{grid-template-columns:1fr}
 }
 
-body {
-  display: flex;
-  justify-content: center;
-  padding: 2rem 1rem;
+
+
+================================================
+FILE: tsconfig.json
+================================================
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    /* Path alias for Vite */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src"]
 }
 
-/*  ------------------------------------------------------------------
-    Floating gear button (settings)
-    ------------------------------------------------------------------ */
-.gear-btn {
-  position: fixed;
-  top: 1.25rem;
-  right: 1.25rem;
-  width: 36px;
-  height: 36px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  backdrop-filter: blur(14px) saturate(180%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: filter .15s;
-}
-.gear-btn:hover {
-  filter: brightness(.95);
-}
-.gear-btn img {
-  width: 18px;
-  height: 18px;
+
+
+================================================
+FILE: vite.config.ts
+================================================
+import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
+import { resolve } from 'path';
+
+export default defineConfig({
+  base: './',  
+
+  // —————————————————————————————————————————————————————
+  // Allow absolute imports from `src/` via the “@” alias
+  // —————————————————————————————————————————————————————
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
+
+  // —————————————————————————————————————————————————————
+  // Make sure Vite bundles our SVGs from src/assets/icons
+  // —————————————————————————————————————————————————————
+  assetsInclude: ['**/*.svg'],
+
+  plugins: [
+    VitePWA({
+      registerType: 'prompt',
+      manifest: {
+        name: 'Calculadora de Parcelamento',
+        short_name: 'Parcelas',
+        icons: [
+          { src: 'logo.svg', sizes: '192x192', type: 'image/svg+xml' }
+        ],
+        start_url: './',
+        display: 'standalone',
+        background_color: '#f5f5f7',
+        theme_color: '#0066c0',
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,json}'],
+        cleanupOutdatedCaches: true,
+      },
+    }),
+  ],
+
+  build: {
+    rollupOptions: {
+      input: {
+        main:     resolve(__dirname, 'index.html'),
+        settings: resolve(__dirname, 'settings.html'),
+      },
+    },
+  },
+});
+
+
+
+================================================
+FILE: src/fees.ts
+================================================
+// src/fees.ts
+// -----------------------------------------------------------------------------
+// Pure‑logic module for installment‑price surcharge calculations.
+// -----------------------------------------------------------------------------
+
+/**
+ * Single row inside the issuer JSON table.
+ * Percentages are expressed as *percent* (e.g. 6.78, not 0.0678).
+ */
+export interface FeeRow {
+  installments: number;
+  mdr: number;       // MDR % for this tier
+  rr: number;        // Rotativo Rate % for this tier
+  total: number;     // Convenience: mdr + rr
 }
 
-/*  ------------------------------------------------------------------
-    Containers & two‑column layout
-    ------------------------------------------------------------------ */
-.container {
-  width: 100%;
-  max-width: 1040px;
+/**
+ * Shape of an issuer JSON file sitting in /public/data/*.json
+ */
+export interface IssuerTable {
+  issuer: string;
+  updated?: string;   // ISO date, optional meta
+  parcelas: FeeRow[];
 }
 
-.container.two-col .content {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
+/**
+ * Result object returned to the UI for each installment tier.
+ */
+export interface CalcResult {
+  installments: number;
+  feePercent: number;       // MDR+RR as percent (e.g. 8.52)
+  surcharge: number;        // Δ – extra charged to customer (rounded ↑)
+  finalPrice: number;       // P_base + surcharge (rounded ↑)
+  perInstallment: number;   // value of each installment except possibly last
+  extraPaidPercent: number; // (finalPrice / basePrice − 1) × 100 (rounded ↑)
 }
 
-/* enforce side‑by‑side panels on desktop ≥900px */
-@media (min-width: 900px) {
-  .panel-left {
-    flex: 0 0 360px;
-    max-width: 360px;
+// -----------------------------------------------------------------------------
+// Utility helpers
+// -----------------------------------------------------------------------------
+
+/**
+ * Round *up* (ceiling) to the given number of decimal places.
+ * A small negative epsilon is subtracted first to mitigate FP edge cases
+ * where a value sits exactly on a decimal boundary (e.g. 10.67).
+ */
+export function roundUp(value: number, decimals = 2): number {
+  const factor = 10 ** decimals;
+  return Math.ceil((value - 1e-10) * factor) / factor;
+}
+
+// -----------------------------------------------------------------------------
+// Core formula implementation
+// -----------------------------------------------------------------------------
+
+/**
+ * Computes surcharge (Δ) and final price for one specific fee%.
+ *
+ * @param basePrice      Shelf price (already includes Simples on base MDR).
+ * @param feePercent     MDR + RR total *as percent* (e.g. 8.52).
+ * @param simplesPercent Simples Nacional as decimal (default 0.05 → 5 %).
+ * @param decimals       Decimal places for monetary rounding (default 2).
+ */
+export function calcFinalPrice(
+  basePrice: number,
+  feePercent: number,
+  simplesPercent = 0.05,
+  decimals = 2
+): { surcharge: number; finalPrice: number } {
+  const F = feePercent / 100; // convert to decimal (0.0852)
+  const T = simplesPercent;   // e.g. 0.05
+
+  const delta = (F * basePrice) / (1 - (F + T));
+  const final = basePrice + delta;
+
+  return {
+    surcharge: roundUp(delta, decimals),
+    finalPrice: roundUp(final, decimals)
+  };
+}
+
+// -----------------------------------------------------------------------------
+// Comparison‑table builder (2× → 12×)
+// -----------------------------------------------------------------------------
+
+/**
+ * Generates an array of `CalcResult` objects sorted by nº of installments.
+ *
+ * @param basePrice    Shelf price.
+ * @param issuerTable  JSON block for the selected card brand.
+ * @param simplesRate  Simples % as decimal (default 0.05).
+ */
+export function buildComparisonTable(
+  basePrice: number,
+  issuerTable: IssuerTable,
+  simplesRate = 0.05
+): CalcResult[] {
+  return issuerTable.parcelas
+    .map((row): CalcResult => {
+      const { surcharge, finalPrice } = calcFinalPrice(
+        basePrice,
+        row.total,
+        simplesRate
+      );
+
+      // Round each installment ↑ so customer never sees fractions of centavo.
+      const per = roundUp(finalPrice / row.installments, 2);
+      const extraPaidPercent = roundUp(((finalPrice / basePrice) - 1) * 100, 2);
+
+      return {
+        installments: row.installments,
+        feePercent: row.total,
+        surcharge,
+        finalPrice,
+        perInstallment: row.installments === 1 ? finalPrice : per,
+        extraPaidPercent
+      };
+    })
+    .sort((a, b) => a.installments - b.installments);
+}
+
+// -----------------------------------------------------------------------------
+// Example usage (will be removed in production build)
+// -----------------------------------------------------------------------------
+/*
+import visa from '../public/data/visa.json';
+const table = buildComparisonTable(100, visa as IssuerTable);
+console.table(table);
+*/
+
+
+
+================================================
+FILE: src/issuers.ts
+================================================
+import { IssuerTable } from './fees';
+
+// Load all issuer JSON files from src/data/
+const issuerModules = import.meta.glob('./data/*.json', {
+  eager: true,
+  import: 'default'
+}) as Record<string, IssuerTable>;
+
+// Define your preferred order manually
+const preferredOrder = [
+  'Visa',
+  'Mastercard',
+  'Elo',
+  'Diners',
+  'Hipercard',
+  'JCB',
+  'Sorocred',
+  'Cabal'
+];
+
+// Custom sort function:
+// - preferred issuers first (in order)
+// - unlisted issuers alphabetically after
+function sortByPreferred(a: IssuerTable, b: IssuerTable) {
+  const aIndex = preferredOrder.indexOf(a.issuer);
+  const bIndex = preferredOrder.indexOf(b.issuer);
+
+  if (aIndex !== -1 && bIndex !== -1) {
+    return aIndex - bIndex;
   }
-  .panel-right {
-    flex: 1 1 0;
+  if (aIndex !== -1) return -1;
+  if (bIndex !== -1) return 1;
+
+  return a.issuer.localeCompare(b.issuer);
+}
+
+// Final issuer table list in sorted order
+export const issuerTables: IssuerTable[] =
+  Object.values(issuerModules).sort(sortByPreferred);
+
+// Helper to find a table by name
+export function getIssuerTable(name: string): IssuerTable | undefined {
+  return issuerTables.find(
+    (t) => t.issuer.toLowerCase() === name.toLowerCase()
+  );
+}
+
+
+
+================================================
+FILE: src/main.ts
+================================================
+/* ---------------------------------------------------------------------------
+   src/main.ts – v3: custom combobox, fixed grid, issuer icons, card grid
+--------------------------------------------------------------------------- */
+import '../style.css';
+import { buildComparisonTable } from './fees';
+import { issuerTables, getIssuerTable } from './issuers';
+import GearIcon from '@/assets/icons/gear.svg';
+
+/* Load issuer SVGs */
+const issuerIcons = import.meta.glob<string>(
+  '@/assets/icons/issuers/*.svg', { eager:true, import:'default' }
+) as Record<string,string>;
+
+/* ───────────────────────────────────────────────────────────────────────── */
+
+const brl = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+const $ = (id:string)=>document.getElementById(id)!;
+
+/* DOM refs */
+const nativeSelect  = $('issuer')            as HTMLSelectElement; // hidden
+const combo         = $('issuer-combo')      as HTMLDivElement;
+const comboLabel    = combo.querySelector('.combo-label') as HTMLSpanElement;
+const comboIcon     = combo.querySelector('.combo-icon')  as HTMLImageElement;
+const listbox       = $('issuer-list')       as HTMLUListElement;
+
+const priceInput = $('price')   as HTMLInputElement;
+const calcBtn    = $('calc')    as HTMLButtonElement;
+const resetBtn   = $('reset')   as HTMLButtonElement;
+const msg        = $('msg')     as HTMLDivElement;
+const cardsGrid  = $('cards')   as HTMLDivElement;
+const tbody      = $('tbody')   as HTMLTableSectionElement;
+
+/* helpers */
+const getSimples = () => (parseFloat(localStorage.getItem('simplesRate') ?? '5'))/100;
+
+/* --------------------------------------------------------------------- */
+/* 1. Build combobox list                                                */
+/* --------------------------------------------------------------------- */
+issuerTables.forEach(({issuer})=>{
+  /* hidden <option> for semantics */
+  const opt=document.createElement('option');
+  opt.value=issuer;opt.textContent=issuer;
+  nativeSelect.append(opt);
+
+  /* visible <li> */
+  const li=document.createElement('li');
+  li.setAttribute('role','option');
+  li.dataset.value=issuer;
+
+  const iconPath = issuerIcons[`/src/assets/icons/issuers/${issuer.toLowerCase()}.svg`];
+  li.innerHTML=`<img src="${iconPath ?? ''}" alt="" /><span>${issuer}</span>`;
+  listbox.append(li);
+});
+
+/* open / close */
+function openList(){
+  listbox.hidden=false; combo.setAttribute('aria-expanded','true');
+}
+function closeList(){
+  listbox.hidden=true;  combo.setAttribute('aria-expanded','false');
+}
+
+/* sync selection */
+function selectIssuer(value:string){
+  nativeSelect.value=value;
+  comboLabel.textContent=value;
+  const path = issuerIcons[`/src/assets/icons/issuers/${value.toLowerCase()}.svg`];
+  comboIcon.src = path ?? '';
+  comboIcon.style.opacity = path ? '1':'0';
+
+  /* highlight in list */
+  listbox.querySelectorAll('li').forEach(li=>{
+    li.setAttribute('aria-selected', li.dataset.value===value ? 'true':'false');
+  });
+  closeList();
+}
+
+/* events */
+combo.addEventListener('click', () => {
+  if (listbox.hidden) openList(); else closeList();
+});
+listbox.addEventListener('click', (e)=>{
+  const li=(e.target as HTMLElement).closest('li') as HTMLLIElement;
+  if(li) selectIssuer(li.dataset.value!);
+});
+document.addEventListener('click',e=>{
+  if(!combo.contains(e.target as Node) && !listbox.contains(e.target as Node)) closeList();
+});
+combo.addEventListener('keydown', e=>{
+  const visibleItems = Array.from(listbox.querySelectorAll<HTMLLIElement>('li'));
+  const current = visibleItems.findIndex(li=>li.getAttribute('aria-selected')==='true');
+  switch(e.key){
+    case 'ArrowDown':
+      e.preventDefault();
+      openList();
+      const next = visibleItems[(current+1)%visibleItems.length];
+      next.focus(); break;
+    case 'ArrowUp':
+      e.preventDefault();
+      openList();
+      const prev = visibleItems[(current-1+visibleItems.length)%visibleItems.length];
+      prev.focus(); break;
+    case 'Enter': if(!listbox.hidden) e.preventDefault(); break;
+    case 'Escape': closeList(); break;
   }
+});
+/* initial state */
+selectIssuer('');
+
+/* --------------------------------------------------------------------- */
+/* 2. Card rendering                                                     */
+/* --------------------------------------------------------------------- */
+function clearResults(){
+  cardsGrid.innerHTML=''; tbody.innerHTML=''; msg.textContent='';
+  cardsGrid.style.gridTemplateColumns='';                      // reset grid
 }
 
-/* Panels (left / right) with glassmorphism */
-.panel-left,
-.panel-right {
-  flex: 1 1 320px;
-  padding: 2.25rem 2rem 2rem;
-  border-radius: var(--radius-xl);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(18px) saturate(180%);
-  box-shadow: var(--shadow);
+function buildCard(r:ReturnType<typeof buildComparisonTable>[number]){
+  const card=document.createElement('div'); card.className='card';
+  card.innerHTML=`
+    <div class="installments">${r.installments}×</div>
+    <div class="per">${brl.format(r.perInstallment)}</div>
+    <div class="total">Total ${brl.format(r.finalPrice)}</div>
+    <div class="surcharge">Acréscimo ${brl.format(r.surcharge)} (${r.extraPaidPercent.toFixed(2)} %)</div>`;
+  return card;
 }
 
-/*  ------------------------------------------------------------------
-    Header
-    ------------------------------------------------------------------ */
-.app-header {
-  text-align: center;
-  margin-bottom: 1.75rem;
-}
-.logo {
-  width: 96px;
-  margin: 0 auto 1rem;
-}
-h1 {
-  font-size: 1.65rem;
-  font-weight: 600;
-  color: var(--primary);
-}
+let selectedCard:HTMLDivElement|null=null;
 
-/*  ------------------------------------------------------------------
-    Form elements – neumorphic inset style
-    ------------------------------------------------------------------ */
-label {
-  font-weight: 600;
-  display: block;
-  margin: .85rem 0 .45rem;
-}
+calcBtn.addEventListener('click',()=>{
+  clearResults();
+  const issuer=nativeSelect.value;
+  const base=parseFloat(priceInput.value);
+  if(!issuer){msg.textContent='Selecione a bandeira.';return;}
+  if(isNaN(base)||base<=0){msg.textContent='Valor inválido.';return;}
 
-/* issuer field wrapper for inline logo */
-.issuer-field {
-  display: flex;
-  align-items: center;
-}
-.issuer-field select {
-  flex: 1;
-}
+  const table=getIssuerTable(issuer);
+  if(!table){msg.textContent='Tabela não encontrada.';return;}
 
-input,
-select {
-  width: 100%;
-  padding: .58rem .9rem;
-  font-size: 1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(0,0,0,.06);
-  background: #fdfdfd;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,.04);
-  transition: border .15s, box-shadow .15s;
-}
-input:focus,
-select:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(20,184,166,.25), inset 0 2px 4px rgba(0,0,0,.04);
-}
+  const rows=buildComparisonTable(base,table,getSimples());
+  const maxRows=3; const cols=Math.ceil(rows.length/maxRows);
+  cardsGrid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
 
-/* issuer logo preview */
-.issuer-preview {
-  width: 22px;
-  height: 22px;
-  margin-left: .5rem;
-  flex: 0 0 22px;
-  opacity: 0;
-  transition: opacity .2s;
-}
+  rows.forEach(r=>{
+    const card=buildCard(r);
+    card.addEventListener('click',()=>{
+      selectedCard?.classList.remove('selected');
+      card.classList.add('selected'); selectedCard=card;
+    });
+    cardsGrid.append(card);
+  });
+  cardsGrid.scrollIntoView({behavior:'smooth'});
+});
 
-/* Button row */
-.btn-row {
-  display: flex;
-  gap: .75rem;
-  margin-top: 1.25rem;
-}
-.btn {
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: .55rem 1.2rem;
-  border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  transition: filter .15s, background .15s;
-}
-.btn.primary {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 6px 14px rgba(0,0,0,.12);
-}
-.btn.primary:hover {
-  background: var(--accent‑hover);
-}
-.btn.secondary {
-  background: #fff;
-  color: var(--text);
-  border-color: rgba(0,0,0,.12);
-}
-.btn.secondary:hover {
-  filter: brightness(.97);
-}
+/* enter‑to‑calc */
+priceInput.addEventListener('keydown',e=>{ if(e.key==='Enter') calcBtn.click(); });
 
-/* Inline message */
-.msg {
-  margin-top: .85rem;
-  font-weight: 600;
-  color: #b91c1c;
-}
+/* reset */
+resetBtn.addEventListener('click',()=>{
+  priceInput.value=''; nativeSelect.value=''; selectIssuer('');
+  clearResults();
+});
 
-/*  ------------------------------------------------------------------
-    Cards grid (results) – row‑wise flow
-    ------------------------------------------------------------------ */
-.cards-grid {
-  display: grid;
-  grid-auto-flow: row;                               /* flow L→R, then wrap */
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  grid-auto-rows: auto;
-  gap: 1.25rem;
-}
+/* gear icon */
+const gearImg=document.getElementById('gear-icon') as HTMLImageElement;
+gearImg.src=GearIcon; gearImg.width=18; gearImg.height=18;
 
-/* Individual card – clearer hierarchy */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
-  padding: 1.2rem 1rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  cursor: pointer;
-  transition: transform .12s, box-shadow .12s;
-}
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0,0,0,.10);
-}
-.card.selected {
-  background: var(--selected);
-}
-
-/* Card typography */
-.card .installments {
-  font-size: 1.35rem;
-  font-weight: 600;
-  margin-bottom: .35rem;
-  color: var(--primary);
-}
-.card .per {
-  font-family: 'Roboto Mono', monospace;
-  font-size: 1.25rem;
-  margin-bottom: .55rem;
-}
-.card .total,
-.card .surcharge {
-  font-size: .9rem;
-  line-height: 1.3;
-  color: #334155;
-}
-.card .total {
-  margin-bottom: .15rem;
-}
-
-/*  ------------------------------------------------------------------
-    Legacy table (temporarily hidden)
-    ------------------------------------------------------------------ */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1.5rem;
-  font-variant-numeric: tabular-nums;
-}
-th,
-td {
-  border: 1px solid rgba(0,0,0,.08);
-  padding: .45rem .35rem;
-  text-align: right;
-  font-size: .95rem;
-}
-th {
-  font-weight: 600;
-  background: rgba(255,255,255,.6);
-  backdrop-filter: blur(12px);
-}
-th:first-child,
-td:first-child {
-  text-align: center;
-}
-tbody tr:nth-child(even) {
-  background: rgba(0,0,0,.02);
-}
-tbody tr:hover {
-  background: rgba(0,0,0,.04);
-}
-tbody tr.selected {
-  background: var(--selected)!important;
-}
-
-/*  ------------------------------------------------------------------
-    Links
-    ------------------------------------------------------------------ */
-a {
-  color: var(--accent);
-}
-a:hover {
-  text-decoration: none;
-}
-
-/*  ------------------------------------------------------------------
-    Responsive tweaks – single column fallback under 820px
-    ------------------------------------------------------------------ */
-@media (max-width: 820px) {
-  .panel-right {
-    flex: 1 1 100%;
-  }
-  .cards-grid {
-    grid-auto-flow: row;
-    grid-template-columns: 1fr;
-    grid-auto-rows: none;
-  }
-}
-
-@media(max-width: 480px) {
-  body { padding: 1rem 0.5rem; }
-  .panel-left, .panel-right { padding: 1.5rem 1rem 1.5rem; width: min(100%, 400px); }
-  h1 { font-size: 1.5rem; }
-  .card { padding: 1rem 0.8rem; }
-  .card .installments { font-size: 1.2rem; }
-  .card .per { font-size: 1.1rem; }
-  .card .total, .card .surcharge { font-size: 0.85rem; }
-  .combo-list{ max-height: 200px; }
-}
-
-/* Legacy table hidden */
-#legacy-table { display: none !important; }
