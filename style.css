@@ -24,7 +24,7 @@
   /* motion / layout */
   --ease-out:cubic-bezier(.22,1,.36,1);
   --panel-init:960px;
-  --panel-expand:1180px;          /* narrower than v1 */
+  --panel-expand:1240px;          /* fits 4 cards + gaps perfectly */
 }
 
 /* ------------------------------------------------------------------
@@ -59,23 +59,27 @@ body{display:flex;justify-content:center;padding:2rem 1rem}
    Panels
 ------------------------------------------------------------------ */
 .panel-left,.panel-right{
-  padding:2.25rem 2rem 2rem;border-radius:var(--radius-xl);
+  padding:2.25rem 2rem 2rem;                   /* default */
+  border-radius:var(--radius-xl);
   background:var(--surface);border:1px solid var(--border);
-  backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--shadow);
+  backdrop-filter:blur(22px) saturate(180%);
+  box-shadow:var(--shadow);
 }
 
 /* Left panel */
 #panel-left{
   width:280px;
   position:absolute;left:0;top:0;
-  transition:transform .32s var(--ease-out); /* opacity removed */
+  transition:transform .32s var(--ease-out);
 }
-#panel-left.shrunk{transform:translateX(-80px);} /* always visible */
+#panel-left.shrunk{transform:translateX(-80px);} /* still visible */
 
 /* Right panel */
 #panel-right{
+  /* reduced vertical padding & tighter side padding */
+  padding:1.75rem 1.5rem 1.75rem;
   width:var(--panel-init);
-  position:relative;             /* anchor summary banner */
+  position:relative;
   transition:width .32s var(--ease-out),box-shadow .32s var(--ease-out);
 }
 #panel-right.expanded{width:var(--panel-expand)}
@@ -153,8 +157,8 @@ input:focus{
 ------------------------------------------------------------------ */
 .cards-grid{
   display:grid;
-  gap:1.25rem;
   grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:1rem 1.5rem;                 /* row 16 px, column 24 px */
   justify-content:center;
 }
 
