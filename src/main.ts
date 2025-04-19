@@ -1,288 +1,150 @@
-/* ---------------------------------------------------------------------------
-   src/main.ts – v4.1: Fixed selectIssuer scope issue
---------------------------------------------------------------------------- */
+/*  ---------------------------------------------------------------------------
+    src/main.ts – UI controller (v3, inline logos, row‑wise flow, two‑column grid)
+    --------------------------------------------------------------------------- */
+
 import '../style.css';
 import { buildComparisonTable, CalcResult } from './fees';
 import { issuerTables, getIssuerTable } from './issuers';
 import GearIcon from '@/assets/icons/gear.svg';
 
-/* Load issuer SVGs */
 const issuerIcons = import.meta.glob<string>(
-  '@/assets/icons/issuers/*.svg', { eager:true, import:'default' }
-) as Record<string,string>;
+  '@/assets/icons/issuers/*.svg',
+  { eager: true, import: 'default' }
+) as Record<string, string>;
 
-/* ───────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  Utilities and shorthand selectors                                        */
+/* ────────────────────────────────────────────────────────────────────────── */
+const brl = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL'
+});
 
-// Intl Formatters
-const brl = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
-const percent = new Intl.NumberFormat('pt-BR', {style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2});
+const $ = (id: string) => document.getElementById(id)!;
 
-// DOM element selector helper
-const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
+const issuerSelect  = $('issuer')          as HTMLSelectElement;
+const issuerPreview = $('issuer-preview')  as HTMLImageElement;
+const priceInput    = $('price')           as HTMLInputElement;
+const calcBtn       = $('calc')            as HTMLButtonElement;
+const resetBtn      = $('reset')           as HTMLButtonElement;
+const msg           = $('msg')             as HTMLDivElement;
+const cardsGrid     = $('cards')           as HTMLDivElement;
+const tbodyLegacy   = $('tbody')           as HTMLTableSectionElement;
 
-/* DOM refs */
-const contentDiv    = $('.content')          as HTMLDivElement;
-const nativeSelect  = $('#issuer')           as HTMLSelectElement;
-const combo         = $('#issuer-combo')     as HTMLDivElement;
-const comboLabel    = combo.querySelector('.combo-label') as HTMLSpanElement;
-const comboIcon     = combo.querySelector('.combo-icon')  as HTMLImageElement;
-const listbox       = $('#issuer-list')      as HTMLUListElement;
+/*  Simples Nacional stored per‑device in localStorage (default 5 %) */
+const getSimples = () =>
+  (parseFloat(localStorage.getItem('simplesRate') ?? '5')) / 100;
 
-const priceInput = $('#price')   as HTMLInputElement;
-const calcBtn    = $('#calc')    as HTMLButtonElement;
-const resetBtn   = $('#reset')   as HTMLButtonElement;
-const msg        = $('#msg')     as HTMLDivElement;
-const cardsGrid  = $('#cards')   as HTMLDivElement;
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  1. Populate dropdown & wire up issuer logo preview                      */
+/* ────────────────────────────────────────────────────────────────────────── */
+issuerTables.forEach(({ issuer }) => {
+  const o = document.createElement('option');
+  o.value = issuer;
+  o.textContent = issuer;
+  issuerSelect.append(o);
+});
 
-// State variable for selected card
-let selectedCard: HTMLDivElement | null = null;
-
-/* Helpers */
-const getSimples = () => (parseFloat(localStorage.getItem('simplesRate') ?? '5')) / 100;
-const MAX_ROWS_PER_COLUMN = 3;
-const PANEL_TRANSITION_DURATION = 400;
-
-/* --------------------------------------------------------------------- */
-/* 1. Initialize State & Combobox                                        */
-/* --------------------------------------------------------------------- */
-
-// --- Moved selectIssuer function here ---
-// Sync selection visual <-> hidden select
-function selectIssuer(value: string) {
-  nativeSelect.value = value; // Update hidden select
-  const selectedTable = getIssuerTable(value);
-  comboLabel.textContent = selectedTable ? selectedTable.issuer : '-- escolha --'; // Display formatted name or placeholder
-
-  const iconFileName = value.toLowerCase().replace(/\s+/g, '');
-  const path = value ? issuerIcons[`/src/assets/icons/issuers/${iconFileName}.svg`] : '';
-  comboIcon.src = path ?? '';
-  comboIcon.alt = value ? `${value} logo` : '';
-  comboIcon.style.opacity = path ? '1' : '0';
-
-  // Highlight selected item in the listbox
-  listbox.querySelectorAll('li').forEach(li => {
-    li.setAttribute('aria-selected', li.dataset.value === value ? 'true' : 'false');
-  });
-  // We still need closeList, define it or move it too if needed elsewhere
-  // Assuming closeList is only needed within setupCombobox for now
-  const listboxElement = $('#issuer-list'); // Re-get ref if needed
-  if (listboxElement) listboxElement.hidden = true;
-  combo.setAttribute('aria-expanded', 'false');
-}
-
-// --- Moved closeList function here ---
-function closeList() {
-    listbox.hidden = true;
-    combo.setAttribute('aria-expanded', 'false');
-}
-
-function initializeApp() {
-  // Set initial state class
-  contentDiv.classList.add('state-initial');
-  contentDiv.classList.remove('state-results-visible');
-
-  // Populate combobox
-  issuerTables.forEach(({ issuer }) => {
-    const opt = document.createElement('option');
-    opt.value = issuer;
-    opt.textContent = issuer;
-    nativeSelect.append(opt);
-
-    const li = document.createElement('li');
-    li.setAttribute('role', 'option');
-    li.dataset.value = issuer;
-
-    const iconFileName = issuer.toLowerCase().replace(/\s+/g, '');
-    const iconPath = issuerIcons[`/src/assets/icons/issuers/${iconFileName}.svg`];
-    li.innerHTML = `<img src="${iconPath ?? ''}" alt="${issuer} logo" /><span>${issuer}</span>`;
-    listbox.append(li);
-  });
-
-  // Setup combobox interactions
-  setupCombobox();
-
-  // Set initial empty state for combobox
-  selectIssuer('');
-
-  // Set gear icon
-  const gearImg = document.getElementById('gear-icon') as HTMLImageElement;
-  if (gearImg) {
-    gearImg.src = GearIcon;
-    gearImg.width = 18;
-    gearImg.height = 18;
+issuerSelect.addEventListener('change', () => {
+  const key = issuerSelect.value.toLowerCase();
+  const path = issuerIcons[`/src/assets/icons/issuers/${key}.svg`];
+  if (path) {
+    issuerPreview.src = path;
+    issuerPreview.style.opacity = '1';
+  } else {
+    issuerPreview.src = '';
+    issuerPreview.style.opacity = '0';
   }
-}
+});
 
-function setupCombobox() {
-  // Open/close listbox
-  function openList() {
-    listbox.hidden = false;
-    combo.setAttribute('aria-expanded', 'true');
-    const selectedLi = listbox.querySelector<HTMLLIElement>('[aria-selected="true"]');
-    selectedLi?.focus();
-  }
-  // closeList is now defined outside
-
-  // Event Listeners
-  combo.addEventListener('click', () => {
-    if (listbox.hidden) openList(); else closeList();
-  });
-
-  listbox.addEventListener('click', (e) => {
-    const li = (e.target as HTMLElement).closest('li');
-    if (li && li.dataset.value) {
-      selectIssuer(li.dataset.value); // Calls the outer function
-      // closeList() is called inside selectIssuer now
-    }
-  });
-
-  // Close on outside click
-  document.addEventListener('click', e => {
-    if (!combo.contains(e.target as Node) && !listbox.contains(e.target as Node)) {
-      closeList();
-    }
-  });
-
-   // Keyboard navigation for combobox trigger
-  combo.addEventListener('keydown', e => {
-    if (listbox.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ')) {
-      e.preventDefault(); openList(); return;
-    }
-    if (!listbox.hidden) {
-      handleListboxKeydown(e); // Delegate listbox keys
-    }
-  });
-  // Keyboard navigation for list items themselves
-  listbox.addEventListener('keydown', handleListboxKeydown); // Delegate listbox keys
-
-  function handleListboxKeydown(e: KeyboardEvent) {
-    const items = Array.from(listbox.querySelectorAll<HTMLLIElement>('li'));
-    const active = document.activeElement?.closest('li');
-    let currentIdx = active ? items.indexOf(active) : -1;
-    let shouldClose = false;
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        currentIdx = (currentIdx + 1) % items.length;
-        items[currentIdx]?.focus();
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        currentIdx = (currentIdx - 1 + items.length) % items.length;
-        items[currentIdx]?.focus();
-        break;
-      case 'Enter':
-      case ' ':
-        e.preventDefault();
-        if (active && active.dataset.value) {
-          selectIssuer(active.dataset.value); // Calls outer function
-          shouldClose = true;
-        }
-        break;
-      case 'Escape':
-        shouldClose = true;
-        break;
-      case 'Tab':
-        shouldClose = true; // Close listbox on tab away
-        break;
-      default: return; // Ignore other keys
-    }
-
-    if (shouldClose) {
-      closeList();
-      combo.focus(); // Return focus to the combo trigger
-    }
-  }
-}
-
-
-/* --------------------------------------------------------------------- */
-/* 2. Calculation & Rendering Logic                                      */
-/* --------------------------------------------------------------------- */
-
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  2. Core render helpers                                                   */
+/* ────────────────────────────────────────────────────────────────────────── */
+/** Clears results and state */
 function clearResults() {
   cardsGrid.innerHTML = '';
+  tbodyLegacy.innerHTML = '';
   msg.textContent = '';
-  selectedCard?.classList.remove('selected');
   selectedCard = null;
 }
 
-function buildCard(result: CalcResult, index: number): HTMLDivElement {
+/** Builds a single result card element */
+function buildCard(r: ReturnType<typeof buildComparisonTable>[number]) {
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-    <div class="installments">${result.installments}×</div>
-    <div class="per">${brl.format(result.perInstallment)}</div>
-    <div class="total">Total ${brl.format(result.finalPrice)}</div>
-    <div class="surcharge">Acréscimo ${brl.format(result.surcharge)} (${percent.format(result.extraPaidPercent)}%)</div>`;
-
-  card.style.transitionDelay = `${index * 50}ms`;
-
-  card.addEventListener('click', () => {
-    selectedCard?.classList.remove('selected');
-    card.classList.add('selected');
-    selectedCard = card;
-  });
-
+    <div class="installments">${r.installments}×</div>
+    <div class="per">${brl.format(r.perInstallment)}</div>
+    <div class="total">Total ${brl.format(r.finalPrice)}</div>
+    <div class="surcharge">Acréscimo ${brl.format(r.surcharge)} (${r.extraPaidPercent.toFixed(2)} %)</div>
+  `;
   return card;
 }
 
-function calculateAndDisplay() {
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  3. Event wiring                                                          */
+/* ────────────────────────────────────────────────────────────────────────── */
+let selectedCard: HTMLDivElement | null = null;
+
+/* Main “Calcular” click handler */
+calcBtn.addEventListener('click', () => {
   clearResults();
 
-  const issuerName = nativeSelect.value;
-  const basePrice = parseFloat(priceInput.value);
-
-  if (!issuerName) {
+  // Input validation
+  const issuer = issuerSelect.value;
+  const base   = parseFloat(priceInput.value);
+  if (!issuer) {
     msg.textContent = 'Selecione a bandeira.';
-    combo.focus(); // Focus combo box trigger instead of hidden input
     return;
   }
-  if (isNaN(basePrice) || basePrice <= 0) {
-    msg.textContent = 'Valor da compra inválido.';
-    priceInput.focus();
-    priceInput.select();
+  if (isNaN(base) || base <= 0) {
+    msg.textContent = 'Valor inválido.';
     return;
   }
 
-  const issuerTable = getIssuerTable(issuerName);
-  if (!issuerTable) {
-    msg.textContent = 'Tabela de taxas não encontrada para esta bandeira.';
+  // Fetch table + build cards
+  const table = getIssuerTable(issuer);
+  if (!table) {
+    msg.textContent = 'Tabela não encontrada.';
     return;
   }
 
-  const results = buildComparisonTable(basePrice, issuerTable, getSimples());
+  const rows = buildComparisonTable(base, table, getSimples());
 
-  contentDiv.classList.remove('state-initial');
-  contentDiv.classList.add('state-results-visible');
+  // 3‑row cap, adjust columns
+  const MAX_ROWS = 3;
+  const cols = Math.ceil(rows.length / MAX_ROWS);
+  cardsGrid.style.gridTemplateColumns = `repeat(${cols},1fr)`;
 
-  const viewportWidth = window.innerWidth;
-  let columns = 1;
-  if (viewportWidth > 960) {
-      columns = Math.ceil(results.length / MAX_ROWS_PER_COLUMN);
-      columns = Math.min(columns, 4);
-      cardsGrid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-  } else {
-      cardsGrid.style.gridTemplateColumns = ''; // Let CSS handle it for stacked view
-  }
+  rows.forEach(r => {
+    const card = buildCard(r);
 
+    // Click‑to‑select behavior
+    card.addEventListener('click', () => {
+      if (selectedCard) selectedCard.classList.remove('selected');
+      card.classList.add('selected');
+      selectedCard = card;
+      selectedCard.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
 
-  results.forEach((result, index) => {
-    const card = buildCard(result, index);
     cardsGrid.append(card);
   });
 
-  setTimeout(() => {
-      const elementToScroll = viewportWidth <= 960 ? cardsGrid : $('#panel-right');
-      elementToScroll?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, PANEL_TRANSITION_DURATION / 2);
-}
+  // Scroll to the grid for visibility on mobile
+  cardsGrid.scrollIntoView({ behavior: 'smooth' });
+});
 
-function resetCalculator() {
+/* Keyboard support – press Enter inside price field triggers Calcular */
+priceInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') calcBtn.click();
+});
+
+/* Reset button */
+resetBtn.addEventListener('click', () => {
   priceInput.value = '';
-  selectIssuer(''); // Calls the outer function - THIS IS LINE 324 now (approx)
-
+  issuerSelect.value = '';
+  issuerPreview.src = '';
+  issuerPreview.style.opacity = '0';
   clearResults();
 
   contentDiv.classList.remove('state-results-visible');
@@ -303,8 +165,14 @@ priceInput.addEventListener('keydown', e => {
   }
 });
 
-/* --------------------------------------------------------------------- */
-/* 4. App Initialization                                                 */
-/* --------------------------------------------------------------------- */
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  4. Wire up the gear‑icon <img> src to the imported SVG URL              */
+/* ────────────────────────────────────────────────────────────────────────── */
+const gearImg = document.getElementById('gear-icon') as HTMLImageElement;
+gearImg.src = GearIcon;
+gearImg.width = 18;
+gearImg.height = 18;
 
-initializeApp();
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  End of module                                                            */
+/* ────────────────────────────────────────────────────────────────────────── */
