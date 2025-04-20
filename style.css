@@ -7,11 +7,9 @@
    Design tokens
 ------------------------------------------------------------------ */
 :root{
-  /* geometry / shadows */
   --radius-xl:14px; --radius-md:10px; --radius-sm:8px;
   --shadow:0 4px 12px rgba(0,0,0,.08);
 
-  /* colours */
   --bg-top:#e8f1ff; --bg-bottom:#ffffff;
   --primary:#0d1b2a; --text:#1f2937;
   --surface:rgba(255,255,255,.78);
@@ -19,14 +17,13 @@
   --accent:#14b8a6; --accent-hov:#0ea89a;
   --selected:#e6fae6;
 
-  /* motion / layout */
   --ease-out:cubic-bezier(.22,1,.36,1);
   --panel-init:960px;
-  --panel-expand:1200px;          /* 4 cards × 280 + gaps + padding */
+  --panel-expand:1200px; /* fits 4×280px cards + gaps + padding */
 }
 
 /* ------------------------------------------------------------------
-   Base / page
+   Base page
 ------------------------------------------------------------------ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{
@@ -36,7 +33,9 @@ html,body{
 }
 body{display:flex;justify-content:center;padding:2rem 1rem}
 
-/* Floating gear button */
+/* ------------------------------------------------------------------
+   Floating gear button
+------------------------------------------------------------------ */
 .gear-btn{
   position:fixed;top:1.25rem;right:1.25rem;width:36px;height:36px;
   background:var(--surface);border:1px solid var(--border);border-radius:50%;
@@ -46,19 +45,20 @@ body{display:flex;justify-content:center;padding:2rem 1rem}
 .gear-btn:hover{filter:brightness(.95)}
 .gear-btn img{width:18px;height:18px}
 
-/* Container + workspace ------------------------------------------------ */
+/* ------------------------------------------------------------------
+   Container + workspace
+------------------------------------------------------------------ */
 .container{max-width:1600px;width:100%}
 
-/* Reserve visual space for the left panel so the result panel never
-   bleeds over it. (280 px width – 110 px shift + 64 px visual gap) */
+/* Reserve space for collapsed form (220 px) + desired 40 px gap */
 .workspace{
-  display:flex;justify-content:center;column-gap:64px;
+  display:flex;justify-content:center;column-gap:40px;
   position:relative;
-  padding-left:234px;
+  padding-left:260px; /* keeps result panel logically centred */
 }
 
 /* ------------------------------------------------------------------
-   Panels
+   Panels (shared)
 ------------------------------------------------------------------ */
 .panel-left,.panel-right{
   border-radius:var(--radius-xl);
@@ -66,23 +66,33 @@ body{display:flex;justify-content:center;padding:2rem 1rem}
   backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--shadow);
 }
 
-/* Left panel */
+/* ------------------------------------------------------------------
+   Left panel (form)
+------------------------------------------------------------------ */
 #panel-left{
   width:280px;
-  position:absolute;left:0;top:0;z-index:5;      /* always on top */
-  transform:translateX(0);
+  position:absolute;left:0;top:0;z-index:5;
+  padding:1.5rem 1rem;             /* restored inner padding */
   transition:transform .32s var(--ease-out);
 }
-#panel-left.shrunk{transform:translateX(-110px);} /* still fully visible */
+#panel-left.shrunk{transform:translateX(-60px);} /* still visible */
 
-/* Right panel */
+/* ------------------------------------------------------------------
+   Right panel (results)
+------------------------------------------------------------------ */
 #panel-right{
-  padding:1.5rem 1rem;            /* 24 px vertical, 16 px horizontal */
+  padding:1.5rem 1rem;             /* 24 px vertical, 16 px horizontal */
   width:var(--panel-init);
   position:relative;z-index:1;
-  transition:width .32s var(--ease-out),box-shadow .32s var(--ease-out);
+  transition:
+    width      .32s var(--ease-out),
+    transform  .32s var(--ease-out),
+    box-shadow .32s var(--ease-out);
 }
-#panel-right.expanded{width:var(--panel-expand)}
+#panel-right.expanded{
+  width:var(--panel-expand);
+  transform:translateX(-110px);    /* re‑centres result panel */
+}
 
 /* ------------------------------------------------------------------
    Header
@@ -92,7 +102,7 @@ body{display:flex;justify-content:center;padding:2rem 1rem}
 h1{font-size:1.7rem;font-weight:600;color:var(--primary)}
 
 /* ------------------------------------------------------------------
-   Form
+   Form controls
 ------------------------------------------------------------------ */
 label{font-weight:600;display:block;margin:.85rem 0 .45rem}
 input{
@@ -156,8 +166,8 @@ input:focus{
 ------------------------------------------------------------------ */
 .cards-grid{
   display:grid;
-  grid-template-columns:repeat(4,280px);  /* fixed columns / gaps */
-  gap:1rem;                                /* 16 px both row & col */
+  grid-template-columns:repeat(4,280px);
+  gap:1rem; /* 16 px both row & column */
   justify-content:center;
 }
 
@@ -166,12 +176,11 @@ input:focus{
   100%{opacity:1;transform:none}
 }
 .card{
-  width:280px;height:auto;
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
-  box-shadow:var(--shadow);
-  padding:1rem .9rem;                     /* tighter vertical space */
-  display:flex;flex-direction:column;align-items:center;text-align:center;
-  cursor:pointer;transition:transform .12s,box-shadow .12s;
+  width:280px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);box-shadow:var(--shadow);
+  padding:1rem .9rem;display:flex;flex-direction:column;align-items:center;
+  text-align:center;cursor:pointer;
+  transition:transform .12s,box-shadow .12s;
   animation:cardEnter .24s both;animation-delay:calc(.06s * var(--i));
 }
 .card:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.10)}
